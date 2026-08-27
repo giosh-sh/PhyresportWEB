@@ -15,6 +15,7 @@ import {
   getSliderImages, createSliderImage, updateSliderImage, deleteSliderImage, toggleSliderImageActive,
 } from '@/lib/admin/slider'
 import type { SliderImage } from '@/lib/admin/slider'
+import MediaPicker from '@/components/admin/MediaPicker'
 import { toast } from 'sonner'
 
 export default function SliderPage() {
@@ -29,6 +30,7 @@ export default function SliderPage() {
   const [formImagePreview, setFormImagePreview] = useState('')
   const [formActive, setFormActive] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [mediaPicker, setMediaPicker] = useState(false)
 
   async function load() {
     try {
@@ -228,6 +230,16 @@ export default function SliderPage() {
                   />
                 </label>
               </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="w-full mt-2 h-9 text-xs"
+                onClick={() => setMediaPicker(true)}
+              >
+                <ImageIcon size={14} className="mr-1.5" />
+                Elegir de la biblioteca de medios
+              </Button>
             </div>
 
             <div>
@@ -275,6 +287,16 @@ export default function SliderPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <MediaPicker
+        open={mediaPicker}
+        onClose={() => setMediaPicker(false)}
+        onSelect={(url) => {
+          setFormImage(null)
+          setFormImagePreview(url)
+          setMediaPicker(false)
+        }}
+      />
     </div>
   )
 }
