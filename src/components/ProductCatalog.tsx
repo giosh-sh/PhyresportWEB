@@ -266,7 +266,7 @@ export default function ProductCatalog({ products, categories, activeCategorySlu
         <ul className="space-y-3">
           <li>
             <Link
-              href="/shop"
+              href="/tienda"
               className={`text-base transition-colors ${
                 !activeCategorySlug && !sinCategoria ? "text-black font-medium" : "text-gray-500 hover:text-black"
               }`}
@@ -344,7 +344,7 @@ export default function ProductCatalog({ products, categories, activeCategorySlu
           )}
           <li>
             <Link
-              href="/shop?sin_categoria=1"
+              href="/tienda?sin_categoria=1"
               className={`text-base transition-colors ${
                 sinCategoria ? "text-black font-medium" : "text-gray-500 hover:text-black"
               }`}

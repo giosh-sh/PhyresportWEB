@@ -1,10 +1,5 @@
-import { ShopPageShell } from "@/components/ShopCatalog";
-import type { ShopSearchParams } from "@/components/ShopCatalog";
+import { redirect } from "next/navigation";
 
-export default async function ShopPage({
-  searchParams,
-}: {
-  searchParams: Promise<ShopSearchParams>;
-}) {
-  return <ShopPageShell searchParams={searchParams} />;
+export default function ShopRedirect() {
+  redirect("/tienda");
 }
