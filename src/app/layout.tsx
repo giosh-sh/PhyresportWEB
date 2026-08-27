@@ -48,15 +48,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
-      <html
-        lang="es"
-        className={`${sora.variable} ${inter.variable} ${spaceGrotesk.variable}`}
-      >
-        <body className="min-h-screen bg-white text-charcoal font-body antialiased">
-          {children}
-        </body>
-      </html>
-    </ClerkProvider>
+    <html
+      lang="es"
+      className={`${sora.variable} ${inter.variable} ${spaceGrotesk.variable}`}
+    >
+      <body className="min-h-screen bg-white text-charcoal font-body antialiased">
+        <ClerkProvider>{children}</ClerkProvider>
+      </body>
+    </html>
   );
 }
