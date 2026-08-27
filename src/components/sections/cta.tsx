@@ -11,18 +11,21 @@ export function CTASection() {
         <h2 className="font-display text-[clamp(1.75rem,3.5vw,2.75rem)] font-bold leading-tight text-white mb-4">
           ¿Listo para empezar tu recuperación?
         </h2>
-        <p className="text-lg text-white/70 mb-8 max-w-md mx-auto">
-          Reserva tu primera consulta y descubre cómo podemos ayudarte a volver a moverte sin
+        <p className="text-lg text-white/70 mb-2 max-w-md mx-auto">
+          Reserva tu primera valoración y descubre cómo podemos ayudarte a volver a moverte sin
           límites.
+        </p>
+        <p className="text-sm text-teal font-stats font-medium mb-8">
+          Sin compromiso. Te decimos si podemos ayudarte.
         </p>
         <div className="flex flex-col sm:flex-row justify-center gap-4">
           <a
-            href={siteConfig.whatsappHref}
+            href={siteConfig.whatsappBookingHref}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-teal text-white font-display font-semibold text-[15px] rounded-full shadow-[0_4px_24px_rgba(0,184,212,0.3)] hover:bg-cyan hover:-translate-y-0.5 transition-all"
           >
-            Reservar por WhatsApp
+            Reservar valoración
             <WhatsAppIcon className="w-[18px] h-[18px]" />
           </a>
           <a

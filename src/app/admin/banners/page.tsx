@@ -93,7 +93,7 @@ export default function BannersPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!formTitle.trim()) { toast.error('El tÃ­tulo es obligatorio'); return }
+    if (!formTitle.trim()) { toast.error('El título es obligatorio'); return }
     setSaving(true)
     const fd = new FormData()
     fd.append('title', formTitle)
@@ -115,7 +115,7 @@ export default function BannersPage() {
         ? await updateBanner(editItem.id, fd)
         : await createBanner(fd)
 
-      if (!res || res.error) { toast.error(res?.error || 'Algo saliÃ³ mal') }
+      if (!res || res.error) { toast.error(res?.error || 'Algo salió mal') }
       else {
         toast.success(editItem ? 'Banner actualizado' : 'Banner creado')
         setShowAdd(false)
@@ -124,7 +124,7 @@ export default function BannersPage() {
       }
     } catch (e: any) {
       console.error('Banner save error:', e)
-      toast.error(e?.message || 'Algo saliÃ³ mal')
+      toast.error(e?.message || 'Algo salió mal')
     }
     setSaving(false)
   }
@@ -178,10 +178,10 @@ export default function BannersPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-display tracking-wider text-foreground">Banners</h1>
-          <p className="text-sm text-muted-foreground mt-1">Gestiona los banners hero y las imÃ¡genes promocionales de la portada</p>
+          <p className="text-sm text-muted-foreground mt-1">Gestiona los banners hero y las imágenes promocionales de la portada</p>
         </div>
         <Button onClick={openAdd}>
-          <Plus size={16} className="mr-2" /> AÃ±adir banner
+          <Plus size={16} className="mr-2" /> Añadir banner
         </Button>
       </div>
 
@@ -191,11 +191,11 @@ export default function BannersPage() {
             <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
               <Image size={28} className="text-muted-foreground/60" />
             </div>
-            <h3 className="text-lg font-medium text-foreground mb-1">AÃºn no hay banners</h3>
+            <h3 className="text-lg font-medium text-foreground mb-1">Aún no hay banners</h3>
             <p className="text-sm text-muted-foreground text-center max-w-md mb-4">
-              AÃ±ade banners de la portada para promocionar colecciones, ofertas y contenido destacado.
+              Añade banners de la portada para promocionar colecciones, ofertas y contenido destacado.
             </p>
-            <Button onClick={openAdd}><Plus size={16} className="mr-2" /> AÃ±adir banner</Button>
+            <Button onClick={openAdd}><Plus size={16} className="mr-2" /> Añadir banner</Button>
           </CardContent>
         </Card>
       ) : (
@@ -269,7 +269,7 @@ export default function BannersPage() {
                     <span className="text-xs text-muted-foreground">
                       {formImage ? 'Cambiar imagen' : formImagePreview ? 'Reemplazar imagen' : 'Subir imagen'}
                     </span>
-                    <input type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) { if (f.size > 8 * 1024 * 1024) { setFormImageError('Imagen demasiado grande (mÃ¡x. 8MB)'); return }; setFormImageError(''); setFormImage(f) } }} />
+                    <input type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) { if (f.size > 8 * 1024 * 1024) { setFormImageError('Imagen demasiado grande (máx. 8MB)'); return }; setFormImageError(''); setFormImage(f) } }} />
                   </label>
                   <Button type="button" variant="outline" size="sm" className="h-8 text-xs" onClick={() => setMediaPicker(true)}>
                     <Image size={11} className="mr-1.5" /> Explorar medios
@@ -279,15 +279,15 @@ export default function BannersPage() {
               {formImageError && <p className="text-xs text-admin-danger mt-1">{formImageError}</p>}
             </div>
             <div>
-              <Label htmlFor="title">TÃ­tulo *</Label>
+              <Label htmlFor="title">Título *</Label>
               <Input id="title" value={formTitle} onChange={(e) => setFormTitle(e.target.value)} />
             </div>
             <div>
-              <Label htmlFor="subtitle">SubtÃ­tulo</Label>
+              <Label htmlFor="subtitle">Subtítulo</Label>
               <Input id="subtitle" value={formSubtitle} onChange={(e) => setFormSubtitle(e.target.value)} />
             </div>
             <div>
-              <Label htmlFor="description">DescripciÃ³n</Label>
+              <Label htmlFor="description">Descripción</Label>
               <textarea
                 id="description"
                 rows={2}
@@ -307,7 +307,7 @@ export default function BannersPage() {
               </div>
             </div>
             <div>
-              <Label>PosiciÃ³n del texto</Label>
+              <Label>Posición del texto</Label>
               <div className="mt-1 grid grid-cols-2 gap-3">
                 <div>
                   <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
@@ -330,8 +330,8 @@ export default function BannersPage() {
               )}
             </div>
             <div>
-              <Label>VÃ­deo de fondo (opcional)</Label>
-              <p className="text-xs text-muted-foreground mb-2">Selecciona un vÃ­deo de la biblioteca de medios para usarlo como fondo del banner.</p>
+              <Label>Vídeo de fondo (opcional)</Label>
+              <p className="text-xs text-muted-foreground mb-2">Selecciona un vídeo de la biblioteca de medios para usarlo como fondo del banner.</p>
               <div className="flex items-center gap-3">
                 {formVideoUrl && (
                   <div className="w-32 h-20 rounded border border-border overflow-hidden flex-shrink-0 bg-black flex items-center justify-center">
@@ -340,7 +340,7 @@ export default function BannersPage() {
                 )}
                 <Button type="button" variant="outline" size="sm" onClick={() => { setMediaPickerMode('video'); setMediaPicker(true) }}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="mr-1.5"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/><line x1="17" y1="17" x2="22" y2="17"/></svg>
-                  {formVideoUrl ? 'Cambiar vÃ­deo' : 'Seleccionar vÃ­deo de medios'}
+                  {formVideoUrl ? 'Cambiar vídeo' : 'Seleccionar vídeo de medios'}
                 </Button>
               </div>
             </div>
@@ -361,7 +361,7 @@ export default function BannersPage() {
                     type="number"
                     value={formVideoEnd}
                     onChange={(e) => setFormVideoEnd(e.target.value)}
-                    placeholder="VÃ­deo completo"
+                    placeholder="Vídeo completo"
                   />
                 </div>
               </div>
@@ -394,7 +394,7 @@ export default function BannersPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Eliminar banner</DialogTitle>
-            <DialogDescription>Â¿EstÃ¡s seguro? Esta acciÃ³n no se puede deshacer.</DialogDescription>
+            <DialogDescription>¿Estás seguro? Esta acción no se puede deshacer.</DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleteId(null)}>Cancelar</Button>

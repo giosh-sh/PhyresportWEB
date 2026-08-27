@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { SignInButton, SignUpButton, Show, UserButton, useUser } from "@clerk/nextjs";
 import { siteConfig } from "@/lib/data";
-import { Menu, X, ShoppingBag, Heart, ChevronDown, Shield } from "lucide-react";
+import { Menu, X, ShoppingBag, Heart, ChevronDown, Shield, Package } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCartStore } from "@/store/cart";
 import { useFavoritesStore } from "@/store/favorites-store";
@@ -141,7 +141,15 @@ export function Header({
                     avatarBox: "w-9 h-9",
                   },
                 }}
-              />
+              >
+                <UserButton.MenuItems>
+                  <UserButton.Link
+                    href="/orders"
+                    label="Mis pedidos"
+                    labelIcon={<Package className="w-4 h-4" />}
+                  />
+                </UserButton.MenuItems>
+              </UserButton>
             </Show>
             <AdminLink />
 
@@ -221,13 +229,22 @@ export function Header({
               </SignUpButton>
             </Show>
             <Show when="signed-in">
-              <UserButton
-                appearance={{
-                  elements: {
-                    avatarBox: "w-10 h-10",
-                  },
-                }}
-              />
+              <div className="flex flex-col items-center gap-3">
+                <Link
+                  href="/orders"
+                  onClick={() => setMobileOpen(false)}
+                  className="font-display text-sm font-semibold text-white/80 hover:text-teal transition-colors"
+                >
+                  Mis pedidos
+                </Link>
+                <UserButton
+                  appearance={{
+                    elements: {
+                      avatarBox: "w-10 h-10",
+                    },
+                  }}
+                />
+              </div>
             </Show>
           </div>
 

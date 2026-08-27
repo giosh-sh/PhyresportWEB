@@ -133,6 +133,7 @@ export interface AdminCategory {
   description: string;
   image: string;
   is_collection: boolean;
+  sort_order?: number;
   product_count: number;
   children?: AdminCategory[];
 }

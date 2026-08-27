@@ -8,6 +8,8 @@ export const siteConfig = {
   phoneHref: "tel:664016679",
   whatsapp: "34664016679",
   whatsappHref: "https://wa.me/34664016679",
+  whatsappBookingHref:
+    "https://wa.me/34664016679?text=Hola%2C%20me%20gustar%C3%ADa%20reservar%20una%20valoraci%C3%B3n%20en%20Phyresport.",
   email: "info@phyresport.com",
   address: {
     street: "Calle Domingo Pérez MiniK, 35",
