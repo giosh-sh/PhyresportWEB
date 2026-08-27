@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS categories (
   description TEXT DEFAULT '',
   image TEXT DEFAULT '',
   is_collection BOOLEAN DEFAULT false,
+  sort_order INTEGER NOT NULL DEFAULT 0,
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
