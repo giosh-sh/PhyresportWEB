@@ -272,9 +272,6 @@ export default function AdminDashboard() {
             </span>
             <span className="font-medium tabular-nums">{data.active_discounts}</span>
           </div>
-          <Link href="/admin/analytics" className="flex items-center justify-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors pt-1 border-t border-border/50">
-            Analítica completa <ArrowRight size={10} />
-          </Link>
         </CardContent>
       </Card>
 

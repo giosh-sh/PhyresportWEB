@@ -21,8 +21,6 @@ import {
   Percent,
   Gift,
   Megaphone,
-  LineChart,
-  Shield,
   ExternalLink,
   Activity,
 } from 'lucide-react'
@@ -55,7 +53,6 @@ const marketingGroup: NavGroupDef = {
   items: [
     { label: 'Descuentos', href: '/admin/discounts', icon: Percent },
     { label: 'Tarjetas regalo', href: '/admin/gift-cards', icon: Gift },
-    { label: 'Campañas', href: '/admin/campaigns', icon: Megaphone },
     { label: 'Newsletter', href: '/admin/newsletter', icon: Mail },
   ],
 }
@@ -70,9 +67,7 @@ const entries: NavEntry[] = [
   { kind: 'link', label: 'Clientes', href: '/admin/customers', icon: Users },
   { kind: 'link', label: 'Banners', href: '/admin/banners', icon: Image },
   { kind: 'link', label: 'Medios', href: '/admin/media', icon: Library },
-  { kind: 'link', label: 'Analítica', href: '/admin/analytics', icon: LineChart },
   { kind: 'link', label: 'Ajustes', href: '/admin/settings', icon: Settings },
-  { kind: 'link', label: 'Sistema', href: '/admin/system', icon: Shield },
 ]
 
 interface AdminSidebarProps {

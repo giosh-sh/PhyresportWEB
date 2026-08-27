@@ -15,13 +15,10 @@ const breadcrumbLabels: Record<string, string> = {
   discounts: 'Descuentos',
   'gift-cards': 'Tarjetas regalo',
   customers: 'Clientes',
-  campaigns: 'Campañas',
   newsletter: 'Newsletter',
   banners: 'Banners',
-  analytics: 'Analítica',
   media: 'Medios',
   settings: 'Ajustes',
-  system: 'Sistema',
 }
 
 interface AdminHeaderProps {
