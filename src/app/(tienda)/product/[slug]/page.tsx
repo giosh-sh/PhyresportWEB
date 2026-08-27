@@ -6,7 +6,7 @@ import ProductDetailClient from "@/components/ProductDetailClient";
 
 function LoadingSkeleton() {
   return (
-    <main className="min-h-screen bg-paper pt-28">
+    <main className="min-h-screen bg-paper pt-28 lg:pt-32">
       <div className="container-main py-12">
         <div className="animate-pulse flex flex-col lg:flex-row gap-10">
           <div className="lg:w-1/2 aspect-[4/5] bg-ice" />

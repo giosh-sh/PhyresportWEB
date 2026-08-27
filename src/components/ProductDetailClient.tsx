@@ -183,7 +183,7 @@ export default function ProductDetailClient({ product }: { product: Product }) {
     : 0
 
   return (
-    <main className="min-h-screen bg-paper pb-24 lg:pb-20">
+    <main className="min-h-screen bg-paper pt-28 lg:pt-32 pb-24 lg:pb-20">
       <div className="max-w-[1400px] mx-auto">
         {/* Breadcrumb */}
         <nav className="flex items-center gap-2 text-[11px] tracking-wide text-[#A09C95] px-4 lg:px-8 py-4 lg:pt-6">
