@@ -21,7 +21,7 @@ function slugToHref(slug: string): string {
   if (slug === "inicio") return "/";
   if (slug === "servicios") return "/servicios";
   if (slug === "cursos") return "/cursos";
-  if (slug === "phyresport-products" || slug === "productos" || slug === "shop") return "/shop";
+  if (slug === "phyresport-products" || slug === "productos" || slug === "shop" || slug === "tienda") return "/shop";
   if (slug === "contacto") return "/contacto";
   if (slug === "fisioterapia" || slug === "osteopatia" || slug === "osteopat-a" || slug === "podologia" || slug === "podolog-a" || slug === "terapia-manual" || slug === "plantillas") {
     return `/servicios/${slug.replace("-a", "ia")}`;
@@ -56,7 +56,10 @@ export function Header({
 
   const rootCategories = categories.filter((c) => !c.parent_id);
 
-  const navItems = [...rootCategories, ...STATIC_LINKS].filter(
+  const navItems = [
+    ...rootCategories.map((c) => ({ ...c, href: slugToHref(c.slug) })),
+    ...STATIC_LINKS,
+  ].filter(
     (item, index, arr) =>
       arr.findIndex((x) => (x as { href?: string }).href === (item as { href?: string }).href) === index
   );
@@ -86,7 +89,7 @@ export function Header({
             {navItems.map((item) => {
               const href = (item as { href?: string }).href;
               const label = (item as { label?: string }).label;
-              const isCategory = !(item as { href?: string }).href;
+              const isCategory = Boolean((item as Category).id);
               const cat = isCategory ? (item as Category) : null;
               const hasChildren = cat?.children && cat.children.length > 0;
 
