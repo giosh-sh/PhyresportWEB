@@ -165,9 +165,17 @@ export const getFeaturedProducts = cache(async (): Promise<Product[]> => {
 export const getCategories = cache(async (rootOnly?: boolean): Promise<Category[]> => {
   try {
     const supabase = getSupabaseClient();
-    let q = supabase.from("categories").select("id, name, slug, parent_id").order("name");
+    let q = supabase
+      .from("categories")
+      .select("id, name, slug, parent_id")
+      .order("sort_order", { ascending: true })
+      .order("name");
     if (rootOnly) q = q.is("parent_id", null);
-    const { data } = await q;
+    const { data, error } = await q;
+    if (error) {
+      const fallback = await supabase.from("categories").select("id, name, slug, parent_id").order("name");
+      return (fallback.data ?? []) as Category[];
+    }
     return (data ?? []) as Category[];
   } catch {
     return [];

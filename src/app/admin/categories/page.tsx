@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import {
-  Plus, Edit, Trash2, FolderOpen,
+  Plus, Edit, Trash2, FolderOpen, GripVertical,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -12,8 +12,9 @@ import { Badge } from '@/components/ui/badge'
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog'
-import { getCategories, createCategory, updateCategory, deleteCategory, uploadCategoryImage } from '@/lib/admin/categories'
+import { getCategories, createCategory, updateCategory, deleteCategory, uploadCategoryImage, reorderCategories } from '@/lib/admin/categories'
 import type { AdminCategory } from '@/lib/admin/types'
+import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 
 export default function AdminCategoriesPage() {
@@ -26,6 +27,8 @@ export default function AdminCategoriesPage() {
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState('')
   const [saving, setSaving] = useState(false)
+  const [dragId, setDragId] = useState<string | null>(null)
+  const [overId, setOverId] = useState<string | null>(null)
 
   async function load() {
     try {
@@ -105,15 +108,85 @@ export default function AdminCategoriesPage() {
     }
   }
 
+  async function handleDrop(targetId: string) {
+    if (!dragId || dragId === targetId) {
+      setDragId(null)
+      setOverId(null)
+      return
+    }
+
+    const ids = data.map((c) => c.id)
+    const from = ids.indexOf(dragId)
+    const to = ids.indexOf(targetId)
+    if (from < 0 || to < 0) {
+      setDragId(null)
+      setOverId(null)
+      return
+    }
+
+    ids.splice(to, 0, ids.splice(from, 1)[0])
+    const nextData = ids
+      .map((id) => data.find((c) => c.id === id))
+      .filter((c): c is AdminCategory => !!c)
+    setData(nextData)
+    setDragId(null)
+    setOverId(null)
+
+    const res = await reorderCategories(ids)
+    if (res.error) {
+      toast.error(res.error)
+      load()
+    } else {
+      toast.success('Orden actualizado')
+    }
+  }
+
   function renderCategory(cat: AdminCategory, depth = 0) {
     const indent = depth * 24
+    const draggable = depth === 0
     return (
       <div key={cat.id}>
         <div
-          className="flex items-center justify-between py-3 px-4 rounded-lg hover:bg-accent/5 transition-colors"
+          className={cn(
+            'flex items-center justify-between py-3 px-4 rounded-lg hover:bg-accent/5 transition-colors',
+            draggable && 'cursor-grab active:cursor-grabbing select-none',
+            draggable && dragId === cat.id && 'opacity-40',
+            draggable && overId === cat.id && 'ring-2 ring-primary/50',
+          )}
           style={{ marginLeft: `${indent}px`, paddingLeft: depth > 0 ? '16px' : undefined, borderLeft: depth > 0 ? '2px solid hsl(var(--border))' : undefined }}
+          draggable={draggable}
+          onDragStart={
+            draggable
+              ? (e) => {
+                  setDragId(cat.id)
+                  e.dataTransfer.effectAllowed = 'move'
+                }
+              : undefined
+          }
+          onDragOver={
+            draggable
+              ? (e) => {
+                  e.preventDefault()
+                  e.dataTransfer.dropEffect = 'move'
+                  setOverId(cat.id)
+                }
+              : undefined
+          }
+          onDragLeave={draggable ? () => setOverId((o) => (o === cat.id ? null : o)) : undefined}
+          onDrop={
+            draggable
+              ? (e) => {
+                  e.preventDefault()
+                  handleDrop(cat.id)
+                }
+              : undefined
+          }
+          onDragEnd={draggable ? () => { setDragId(null); setOverId(null) } : undefined}
         >
           <div className="flex items-center gap-3">
+            {draggable && (
+              <GripVertical size={16} className="text-muted-foreground/50 shrink-0" />
+            )}
             <div className="w-10 h-10 rounded bg-muted flex items-center justify-center overflow-hidden">
               {cat.image ? (
                 <img src={cat.image} alt="" className="w-full h-full object-cover" />
