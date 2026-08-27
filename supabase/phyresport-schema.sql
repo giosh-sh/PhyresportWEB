@@ -215,6 +215,17 @@ CREATE TABLE IF NOT EXISTS cart_items (
   updated_at TIMESTAMPTZ DEFAULT now()
 );
 
+-- 15. SLIDER IMAGES (fotos del slider debajo del hero)
+CREATE TABLE IF NOT EXISTS slider_images (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title TEXT DEFAULT '',
+  image_url TEXT NOT NULL DEFAULT '',
+  link_url TEXT,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  active BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
 -- INDEXES
 CREATE INDEX IF NOT EXISTS idx_orders_user_id ON orders(user_id);
 CREATE INDEX IF NOT EXISTS idx_orders_customer_email ON orders(customer_email);
@@ -230,6 +241,7 @@ CREATE INDEX IF NOT EXISTS idx_cart_items_user_id ON cart_items(user_id);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_cart_items_user_product_variant ON cart_items(user_id, product_id, size, color);
 CREATE INDEX IF NOT EXISTS idx_user_favorites_user_id ON user_favorites(user_id);
 CREATE INDEX IF NOT EXISTS idx_email_logs_campaign ON email_logs(campaign_id);
+CREATE INDEX IF NOT EXISTS idx_slider_images_order ON slider_images(sort_order);
 
 -- ROW LEVEL SECURITY
 ALTER TABLE categories ENABLE ROW LEVEL SECURITY;
@@ -246,6 +258,7 @@ ALTER TABLE email_campaigns ENABLE ROW LEVEL SECURITY;
 ALTER TABLE email_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_favorites ENABLE ROW LEVEL SECURITY;
 ALTER TABLE cart_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE slider_images ENABLE ROW LEVEL SECURITY;
 
 -- RLS POLICIES: lectura pública para catálogo
 DROP POLICY IF EXISTS "anon_read_categories" ON categories;
@@ -258,6 +271,8 @@ CREATE POLICY "anon_read_products" ON products FOR SELECT TO anon USING (true);
 CREATE POLICY "anon_read_product_variants" ON product_variants FOR SELECT TO anon USING (true);
 CREATE POLICY "anon_read_banners" ON banners FOR SELECT TO anon USING (true);
 CREATE POLICY "anon_read_featured_products" ON featured_products FOR SELECT TO anon USING (true);
+DROP POLICY IF EXISTS "anon_read_slider_images" ON slider_images;
+CREATE POLICY "anon_read_slider_images" ON slider_images FOR SELECT TO anon USING (true);
 
 -- FUNCTIONS: decremento atómico de stock
 CREATE OR REPLACE FUNCTION decrement_stock(

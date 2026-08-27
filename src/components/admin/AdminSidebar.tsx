@@ -10,6 +10,7 @@ import {
   ChevronRight,
   FolderOpen,
   Image,
+  Images,
   Library,
   Mail,
   Menu,
@@ -66,6 +67,7 @@ const entries: NavEntry[] = [
   { kind: 'group', group: marketingGroup },
   { kind: 'link', label: 'Clientes', href: '/admin/customers', icon: Users },
   { kind: 'link', label: 'Banners', href: '/admin/banners', icon: Image },
+  { kind: 'link', label: 'Slider', href: '/admin/slider', icon: Images },
   { kind: 'link', label: 'Medios', href: '/admin/media', icon: Library },
   { kind: 'link', label: 'Ajustes', href: '/admin/settings', icon: Settings },
 ]

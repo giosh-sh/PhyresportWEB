@@ -1,24 +1,45 @@
-import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { createPublicClient } from "@/lib/supabase/public";
 import { ScrollReveal } from "@/components/ui/scroll-reveal";
+import { AboutSlider, type AboutSlide } from "@/components/sections/about-slider";
 
-export function AboutSection() {
+const DEFAULT_IMAGES: AboutSlide[] = [
+  {
+    id: "default",
+    image:
+      "https://www.phyresport.com/images/sampledata/asimage/home/home.jpg",
+    title: "Instalaciones de Phyresport en Santa Cruz de Tenerife",
+  },
+];
+
+export default async function AboutSection() {
+  let slides: AboutSlide[] = [];
+  try {
+    const supabase = createPublicClient();
+    const { data } = await supabase
+      .from("slider_images")
+      .select("id, title, image_url")
+      .eq("active", true)
+      .order("sort_order", { ascending: true });
+    if (data) {
+      slides = (data as { id: string; title: string | null; image_url: string | null }[])
+        .filter((b) => b.image_url)
+        .map((b) => ({ id: b.id, image: b.image_url as string, title: b.title ?? undefined }));
+    }
+  } catch {
+    // DB sin configurar en local: usar imágenes por defecto
+  }
+  if (slides.length === 0) slides = DEFAULT_IMAGES;
+
   return (
     <section className="py-24 lg:py-28" id="nosotros">
       <div className="mx-auto max-w-7xl px-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-          {/* Image */}
+          {/* Image slider */}
           <ScrollReveal>
             <div className="relative">
-              <Image
-                src="https://www.phyresport.com/images/sampledata/asimage/home/home.jpg"
-                alt="Instalaciones de Phyresport en Santa Cruz de Tenerife"
-                width={560}
-                height={420}
-                className="rounded-2xl w-full h-auto object-cover shadow-xl"
-                loading="lazy"
-              />
+              <AboutSlider slides={slides} />
               <div className="absolute -bottom-4 lg:-bottom-6 right-4 lg:right-[-24px] bg-white rounded-xl p-5 shadow-xl max-w-[240px] border-l-4 border-teal">
                 <p className="font-display text-base font-bold text-navy mb-1">
                   EPI® Ecoguiada
