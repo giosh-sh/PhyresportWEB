@@ -1,0 +1,117 @@
+'use server'
+
+import { requireAdmin } from '@/lib/admin-auth'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { revalidatePath } from 'next/cache'
+import type { AdminDiscount } from './types'
+
+async function checkAdmin() {
+  await requireAdmin()
+}
+
+export async function getDiscounts(): Promise<AdminDiscount[]> {
+  await checkAdmin()
+  const supabase = createAdminClient()
+  const { data } = await supabase.from('discounts').select('*').order('created_at', { ascending: false })
+  return (data ?? []) as AdminDiscount[]
+}
+
+function localToUTC(localDatetime: string | null | undefined): string | null {
+  if (!localDatetime) return null
+  // datetime-local gives "YYYY-MM-DDTHH:MM" in local time
+  // We need to convert it to UTC ISO string
+  const date = new Date(localDatetime)
+  if (isNaN(date.getTime())) return null
+  return date.toISOString()
+}
+
+export async function createDiscount(data: {
+  code: string
+  type: 'percentage' | 'fixed_amount'
+  value: number
+  description?: string
+  min_purchase_cents?: number
+  max_uses?: number | null
+  active?: boolean
+  starts_at?: string | null
+  expires_at?: string | null
+}) {
+  await checkAdmin()
+  const supabase = createAdminClient()
+
+  const { error } = await supabase.from('discounts').insert({
+    code: data.code.toUpperCase(),
+    type: data.type,
+    value: data.value,
+    description: data.description ?? '',
+    min_purchase_cents: data.min_purchase_cents ?? 0,
+    max_uses: data.max_uses ?? null,
+    active: data.active ?? true,
+    starts_at: localToUTC(data.starts_at),
+    expires_at: localToUTC(data.expires_at),
+  })
+
+  if (error) return { error: error.message }
+  revalidatePath('/admin/discounts')
+  return { success: true }
+}
+
+export async function updateDiscount(id: string, data: {
+  code?: string
+  type?: 'percentage' | 'fixed_amount'
+  value?: number
+  description?: string
+  min_purchase_cents?: number
+  max_uses?: number | null
+  active?: boolean
+  starts_at?: string | null
+  expires_at?: string | null
+}) {
+  await checkAdmin()
+  const supabase = createAdminClient()
+
+  const updateData: Record<string, any> = {}
+  if (data.code !== undefined) updateData.code = data.code.toUpperCase()
+  if (data.type !== undefined) updateData.type = data.type
+  if (data.value !== undefined) updateData.value = data.value
+  if (data.description !== undefined) updateData.description = data.description
+  if (data.min_purchase_cents !== undefined) updateData.min_purchase_cents = data.min_purchase_cents
+  if (data.max_uses !== undefined) updateData.max_uses = data.max_uses
+  if (data.active !== undefined) updateData.active = data.active
+  if (data.starts_at !== undefined) updateData.starts_at = localToUTC(data.starts_at)
+  if (data.expires_at !== undefined) updateData.expires_at = localToUTC(data.expires_at)
+
+  const { error } = await supabase.from('discounts').update(updateData).eq('id', id)
+  if (error) return { error: error.message }
+  revalidatePath('/admin/discounts')
+  return { success: true }
+}
+
+export async function deleteDiscount(id: string) {
+  await checkAdmin()
+  const supabase = createAdminClient()
+  const { error } = await supabase.from('discounts').delete().eq('id', id)
+  if (error) return { error: error.message }
+  revalidatePath('/admin/discounts')
+  return { success: true }
+}
+
+export async function bulkDeleteDiscounts(ids: string[]) {
+  await checkAdmin()
+  const supabase = createAdminClient()
+  const { error } = await supabase.from('discounts').delete().in('id', ids)
+  if (error) return { error: error.message }
+  revalidatePath('/admin/discounts')
+  return { success: true }
+}
+
+export async function bulkUpdateDiscounts(ids: string[], data: { active?: boolean }) {
+  await checkAdmin()
+  const supabase = createAdminClient()
+  const updateData: Record<string, any> = {}
+  if (data.active !== undefined) updateData.active = data.active
+  const { error } = await supabase.from('discounts').update(updateData).in('id', ids)
+  if (error) return { error: error.message }
+  revalidatePath('/admin/discounts')
+  return { success: true }
+}
