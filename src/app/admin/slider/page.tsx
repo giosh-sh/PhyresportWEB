@@ -77,8 +77,11 @@ export default function SliderPage() {
       fd.set('title', formTitle)
       fd.set('link_url', formLinkUrl)
       fd.set('active', String(formActive))
-      if (formImagePreview && !formImage) fd.set('image_url', formImagePreview)
-      if (formImage) fd.set('image', formImage)
+      if (formImage) {
+        fd.set('image', formImage)
+      } else if (formImagePreview && !editItem) {
+        fd.set('image_url', formImagePreview)
+      }
 
       const res = editItem
         ? await updateSliderImage(editItem.id, fd)
