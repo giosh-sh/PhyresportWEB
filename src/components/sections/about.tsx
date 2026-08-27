@@ -57,7 +57,7 @@ export default async function AboutSection() {
               Sobre nosotros
             </p>
             <h2 className="font-display text-[clamp(1.75rem,3.5vw,2.75rem)] font-bold leading-tight tracking-tight text-charcoal mb-5">
-              Centro de fisioterapia deportiva en Tenerife
+              Centro de fisioterapia en Tenerife
             </h2>
             <p className="text-lg text-gray-500 leading-relaxed mb-4">
               En Phyresport combinamos experiencia clínica con técnicas de vanguardia. Nuestro
@@ -69,7 +69,7 @@ export default async function AboutSection() {
               cada tratamiento se diseña en función de tu diagnóstico y tus objetivos.
             </p>
             <Link
-              href="/servicios/fisioterapia"
+              href="/servicios"
               className="inline-flex items-center gap-2 font-display font-semibold text-teal hover:text-cyan transition-colors group"
             >
               Conocer nuestros servicios

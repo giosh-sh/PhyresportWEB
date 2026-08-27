@@ -21,11 +21,15 @@ export function TeamSection() {
           </div>
         </ScrollReveal>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          {team.slice(0, 6).map((member, i) => (
-            <ScrollReveal key={member.slug} delay={i * 80}>
+        <div className="flex flex-wrap justify-center gap-8">
+          {team.map((member, i) => (
+            <ScrollReveal
+              key={member.slug}
+              delay={i * 80}
+              className="w-full sm:w-[calc(50%-1rem)] lg:w-[calc(25%-1.5rem)]"
+            >
               <Link
-                href={`/equipo/${member.slug}`}
+                href="/equipo"
                 className="group block text-center p-6 rounded-xl hover:bg-ice transition-all"
               >
                 <div className="relative w-[140px] h-[140px] mx-auto mb-5">

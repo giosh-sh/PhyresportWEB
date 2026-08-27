@@ -43,14 +43,14 @@ export function ServicesSection() {
           {services.map((service, i) => {
             const Icon = iconMap[service.icon] || Activity;
             return (
-              <ScrollReveal key={service.slug} delay={i * 80}>
+              <ScrollReveal key={service.slug} delay={i * 80} className="h-full">
                 <Link
                   href={`/servicios/${service.slug}`}
-                  className="group block bg-white rounded-xl p-7 border border-gray-200 border-l-[3px] border-l-teal shadow-sm hover:shadow-md hover:-translate-y-1 hover:border-teal transition-all relative overflow-hidden"
+                  className="group block h-full flex flex-col bg-white rounded-xl p-7 border border-gray-200 border-l-[3px] border-l-teal shadow-sm hover:shadow-md hover:-translate-y-1 hover:border-teal transition-all relative overflow-hidden"
                 >
                   <div className="absolute inset-0 bg-gradient-to-br from-teal/[0.03] to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
 
-                  <div className="relative">
+                  <div className="relative flex flex-col flex-1">
                     <div className="w-12 h-12 rounded-lg bg-ice flex items-center justify-center text-teal mb-5 group-hover:bg-teal group-hover:text-white transition-all">
                       <Icon className="w-6 h-6 stroke-[1.5]" />
                     </div>
@@ -58,7 +58,7 @@ export function ServicesSection() {
                     <h3 className="font-display text-lg font-bold text-navy mb-2.5">
                       {service.title}
                     </h3>
-                    <p className="text-[15px] text-gray-500 leading-relaxed mb-4">
+                    <p className="text-[15px] text-gray-500 leading-relaxed mb-4 flex-1">
                       {service.description}
                     </p>
                     <span className="inline-flex items-center gap-1.5 font-display text-sm font-semibold text-teal group-hover:gap-2.5 transition-all">
