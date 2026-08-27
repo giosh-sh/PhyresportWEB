@@ -3,21 +3,39 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { SignInButton, SignUpButton, Show, UserButton, useUser } from "@clerk/nextjs";
-import { services, siteConfig } from "@/lib/data";
+import { siteConfig } from "@/lib/data";
 import { Menu, X, ShoppingBag, Heart, ChevronDown, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCartStore } from "@/store/cart";
 import { useFavoritesStore } from "@/store/favorites-store";
+import type { Category } from "@/types/product";
 
-const navLinks = [
+const STATIC_LINKS = [
   { href: "/", label: "Inicio" },
-  { href: "/servicios", label: "Servicios" },
   { href: "/cursos", label: "Cursos" },
   { href: "/shop", label: "Tienda" },
   { href: "/contacto", label: "Contacto" },
 ];
 
-export function Header({ solid = false }: { solid?: boolean }) {
+function slugToHref(slug: string): string {
+  if (slug === "inicio") return "/";
+  if (slug === "servicios") return "/servicios";
+  if (slug === "cursos") return "/cursos";
+  if (slug === "phyresport-products" || slug === "productos" || slug === "shop") return "/shop";
+  if (slug === "contacto") return "/contacto";
+  if (slug === "fisioterapia" || slug === "osteopatia" || slug === "osteopat-a" || slug === "podologia" || slug === "podolog-a" || slug === "terapia-manual" || slug === "plantillas") {
+    return `/servicios/${slug.replace("-a", "ia")}`;
+  }
+  return `/categoria/${slug}`;
+}
+
+export function Header({
+  solid = false,
+  categories = [],
+}: {
+  solid?: boolean;
+  categories?: Category[];
+}) {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -35,6 +53,13 @@ export function Header({ solid = false }: { solid?: boolean }) {
   }, [mobileOpen]);
 
   const isSolid = scrolled || solid;
+
+  const rootCategories = categories.filter((c) => !c.parent_id);
+
+  const navItems = [...rootCategories, ...STATIC_LINKS].filter(
+    (item, index, arr) =>
+      arr.findIndex((x) => (x as { href?: string }).href === (item as { href?: string }).href) === index
+  );
 
   return (
     <>
@@ -58,18 +83,29 @@ export function Header({ solid = false }: { solid?: boolean }) {
 
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-8" aria-label="Navegación principal">
-            <ServicesDropdown />
-            {navLinks
-              .filter((link) => link.label !== "Servicios")
-              .map((link) => (
+            {navItems.map((item) => {
+              const href = (item as { href?: string }).href;
+              const label = (item as { label?: string }).label;
+              const isCategory = !(item as { href?: string }).href;
+              const cat = isCategory ? (item as Category) : null;
+              const hasChildren = cat?.children && cat.children.length > 0;
+
+              if (hasChildren) {
+                return (
+                  <CategoryDropdown key={cat!.id} category={cat!} />
+                );
+              }
+
+              return (
                 <Link
-                  key={link.href}
-                  href={link.href}
+                  key={href || cat!.id}
+                  href={href || slugToHref(cat!.slug)}
                   className="font-display text-sm font-medium text-white/75 hover:text-white transition-colors relative after:absolute after:bottom-[-4px] after:left-0 after:w-0 after:h-0.5 after:bg-teal after:transition-all hover:after:w-full"
                 >
-                  {link.label}
+                  {label || cat!.name}
                 </Link>
-              ))}
+              );
+            })}
           </nav>
 
           {/* CTA */}
@@ -143,16 +179,21 @@ export function Header({ solid = false }: { solid?: boolean }) {
             <X className="w-7 h-7" />
           </button>
 
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              onClick={() => setMobileOpen(false)}
-              className="font-display text-2xl font-bold text-white hover:text-teal transition-colors"
-            >
-              {link.label}
-            </Link>
-          ))}
+          {navItems.map((item) => {
+            const href = (item as { href?: string }).href;
+            const label = (item as { label?: string }).label;
+            const cat = (item as { id?: string }).id ? (item as Category) : null;
+            return (
+              <Link
+                key={href || cat!.id}
+                href={href || slugToHref(cat!.slug)}
+                onClick={() => setMobileOpen(false)}
+                className="font-display text-2xl font-bold text-white hover:text-teal transition-colors"
+              >
+                {label || cat!.name}
+              </Link>
+            );
+          })}
 
           <a
             href={siteConfig.whatsappHref}
@@ -282,7 +323,7 @@ function AdminLink({ mobile }: { mobile?: boolean }) {
   );
 }
 
-function ServicesDropdown() {
+function CategoryDropdown({ category }: { category: Category }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -304,11 +345,11 @@ function ServicesDropdown() {
       onMouseLeave={() => setOpen(false)}
     >
       <Link
-        href="/servicios"
+        href={slugToHref(category.slug)}
         aria-expanded={open}
         className="inline-flex items-center gap-1 font-display text-sm font-medium text-white/75 hover:text-white transition-colors relative after:absolute after:bottom-[-4px] after:left-0 after:w-0 after:h-0.5 after:bg-teal after:transition-all hover:after:w-full"
       >
-        Servicios
+        {category.name}
         <ChevronDown
           className={`w-3.5 h-3.5 transition-transform ${open ? "rotate-180" : ""}`}
           aria-hidden
@@ -318,13 +359,13 @@ function ServicesDropdown() {
       {open && (
         <div className="absolute left-0 top-full pt-3">
           <div className="w-64 rounded-xl border border-gray-100 bg-white p-2 shadow-xl">
-            {services.map((service) => (
+            {(category.children ?? []).map((child) => (
               <Link
-                key={service.slug}
-                href={`/servicios/${service.slug}`}
+                key={child.id}
+                href={slugToHref(child.slug)}
                 className="block rounded-lg px-4 py-2.5 text-sm font-medium text-navy hover:bg-ice hover:text-teal transition-colors"
               >
-                {service.shortTitle}
+                {child.name}
               </Link>
             ))}
           </div>

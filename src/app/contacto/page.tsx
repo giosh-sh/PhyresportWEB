@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { siteConfig } from "@/lib/data";
-import { Header } from "@/components/layout/header";
+import HeaderWrapper from "@/components/layout/header-wrapper";
 import { Footer } from "@/components/layout/footer";
 import { WhatsAppFloat } from "@/components/ui/whatsapp-float";
 import { ScrollReveal } from "@/components/ui/scroll-reveal";
@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 export default function ContactoPage() {
   return (
     <>
-      <Header />
+      <HeaderWrapper />
       <main>
         {/* Hero */}
         <section className="relative pt-28 pb-16 lg:pt-36 lg:pb-20 bg-navy">

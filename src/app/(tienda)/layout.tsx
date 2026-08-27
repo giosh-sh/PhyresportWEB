@@ -1,4 +1,4 @@
-import { Header } from "@/components/layout/header";
+import HeaderWrapper from "@/components/layout/header-wrapper";
 import { Footer } from "@/components/layout/footer";
 import { WhatsAppFloat } from "@/components/ui/whatsapp-float";
 import CartDrawerWrapper from "@/components/CartDrawerWrapper";
@@ -7,7 +7,7 @@ import FavoritesHydrator from "@/components/FavoritesHydrator";
 export default function StoreLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
-      <Header />
+      <HeaderWrapper />
       <main className="flex-1">{children}</main>
       <Footer />
       <WhatsAppFloat />
