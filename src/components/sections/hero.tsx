@@ -1,24 +1,43 @@
 import Image from "next/image";
 import Link from "next/link";
-import { siteConfig } from "@/lib/data";
+import { siteConfig, team } from "@/lib/data";
 import { ArrowRight } from "lucide-react";
+import { createPublicClient } from "@/lib/supabase/public";
 
 const stats = [
   { number: "+15", label: "Años de experiencia" },
   { number: "+5.000", label: "Tratamientos realizados" },
   { number: "7", label: "Especialistas" },
-  { number: "98%", label: "Satisfacción" },
 ];
 
-const avatarColors = ["bg-[#E76F51]", "bg-[#2A9D8F]", "bg-[#E9C46A]", "bg-[#264653]", "bg-teal"];
+const DEFAULT_BG = "https://www.phyresport.com/images/sampledata/asimage/home/home.jpg";
 
-export function HeroSection() {
+async function getHeroBackground(): Promise<string> {
+  try {
+    const supabase = createPublicClient();
+    const { data } = await supabase
+      .from("banners")
+      .select("id, image_url")
+      .eq("active", true)
+      .not("image_url", "is", null)
+      .order("sort_order", { ascending: true })
+      .limit(1);
+    const url = (data?.[0]?.image_url as string) ?? "";
+    return url || DEFAULT_BG;
+  } catch {
+    return DEFAULT_BG;
+  }
+}
+
+export async function HeroSection() {
+  const bg = await getHeroBackground();
+
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden bg-navy" id="inicio">
       {/* Background */}
       <div className="absolute inset-0">
         <Image
-          src="https://www.phyresport.com/images/sampledata/asimage/home/home.jpg"
+          src={bg}
           alt=""
           fill
           className="object-cover opacity-15 saturate-[0.3]"
@@ -32,6 +51,10 @@ export function HeroSection() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           {/* Text */}
           <div>
+            <p className="font-display text-xl lg:text-2xl font-extrabold tracking-[0.35em] uppercase text-white mb-5 animate-fade-up">
+              Phyresport
+            </p>
+
             <p className="font-stats text-[13px] font-medium tracking-widest uppercase text-teal mb-5 animate-fade-up-delay-1">
               Fisioterapia deportiva de precisión
             </p>
@@ -53,17 +76,18 @@ export function HeroSection() {
 
             <p className="text-lg text-white/70 max-w-lg mb-9 animate-fade-up-delay-3">
               Rehabilitación, osteopatía y rendimiento deportivo en Santa Cruz de Tenerife.
-              Técnicas avanzadas con un equipo que entiende tu cuerpo.
+              Recupera tu movimiento con la técnica EPI® Ecoguiada y un equipo que entiende tu
+              cuerpo.
             </p>
 
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-12 animate-fade-up-delay-4">
               <a
-                href={siteConfig.whatsappHref}
+                href={siteConfig.whatsappBookingHref}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 px-7 py-3.5 bg-teal text-white font-display font-semibold text-[15px] rounded-full shadow-[0_4px_24px_rgba(0,184,212,0.3)] hover:bg-cyan hover:-translate-y-0.5 hover:shadow-[0_8px_32px_rgba(0,184,212,0.4)] transition-all"
               >
-                Reservar cita
+                Reservar valoración
                 <ArrowRight className="w-[18px] h-[18px]" />
               </a>
               <Link
@@ -75,7 +99,7 @@ export function HeroSection() {
             </div>
           </div>
 
-          {/* Stats + Patient Cluster */}
+          {/* Stats + Team cluster */}
           <div className="flex flex-col items-center lg:items-end">
             <div className="grid grid-cols-2 gap-4 w-full max-w-[400px]">
               {stats.map((stat) => (
@@ -91,21 +115,23 @@ export function HeroSection() {
               ))}
             </div>
 
-            {/* Patient cluster */}
+            {/* Team cluster */}
             <div className="mt-6 flex items-center gap-3 bg-white/[0.08] border border-white/12 rounded-full py-2.5 px-5 backdrop-blur-md">
               <div className="flex">
-                {avatarColors.map((color, i) => (
-                  <div
-                    key={i}
-                    className={`w-9 h-9 rounded-full border-2 border-navy flex items-center justify-center font-display text-xs font-bold text-white ${color} ${i > 0 ? "-ml-2.5" : ""}`}
-                  >
-                    {i < 4 ? ["MR", "AL", "JP", "LC"][i] : "+"}
-                  </div>
+                {team.slice(0, 5).map((member, i) => (
+                  <Image
+                    key={member.slug}
+                    src={member.image}
+                    alt=""
+                    width={36}
+                    height={36}
+                    className={`w-9 h-9 rounded-full border-2 border-navy object-cover object-top ${i > 0 ? "-ml-2.5" : ""}`}
+                  />
                 ))}
               </div>
               <div className="text-xs text-white/80 font-medium leading-tight">
-                <strong className="block text-white font-stats font-bold">+2.500</strong>
-                pacientes confían en nosotros
+                <strong className="block text-white font-stats font-bold">7 especialistas</strong>
+                te atienden en Tenerife
               </div>
             </div>
           </div>

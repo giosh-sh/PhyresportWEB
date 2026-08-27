@@ -17,6 +17,7 @@ const breadcrumbLabels: Record<string, string> = {
   customers: 'Clientes',
   newsletter: 'Newsletter',
   banners: 'Banners',
+  slider: 'Slider',
   media: 'Medios',
   settings: 'Ajustes',
 }
