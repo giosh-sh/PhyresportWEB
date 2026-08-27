@@ -35,7 +35,18 @@ export async function getCategories(): Promise<AdminCategory[]> {
   await checkAdmin();
   const supabase = createAdminClient();
 
-  const { data: cats } = await supabase.from("categories").select("*").order("name");
+  let cats: any[] | null = null;
+  const res = await supabase
+    .from("categories")
+    .select("*")
+    .order("sort_order", { ascending: true })
+    .order("name");
+  if (res.error) {
+    const fallback = await supabase.from("categories").select("*").order("name");
+    cats = fallback.data;
+  } else {
+    cats = res.data;
+  }
 
   const { data: counts } = await supabase.from("products").select("category_id");
   const countMap = new Map<string, number>();
@@ -64,6 +75,23 @@ export async function getCategories(): Promise<AdminCategory[]> {
   }
 
   return roots;
+}
+
+export async function reorderCategories(orderedIds: string[]) {
+  await checkAdmin();
+  const supabase = createAdminClient();
+
+  for (let i = 0; i < orderedIds.length; i++) {
+    const { error } = await supabase
+      .from("categories")
+      .update({ sort_order: i })
+      .eq("id", orderedIds[i])
+      .is("parent_id", null);
+    if (error) return { error: error.message };
+  }
+
+  revalidatePath("/admin/categories");
+  return { success: true };
 }
 
 export async function createCategory(data: { name: string; parent_id?: string; description?: string; image?: string; is_collection?: boolean }) {
