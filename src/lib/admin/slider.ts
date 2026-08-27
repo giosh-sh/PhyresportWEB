@@ -72,23 +72,21 @@ export async function updateSliderImage(id: string, formData: FormData) {
     try { await checkAdmin() } catch { return { error: 'Unauthorized' } }
     const supabase = createAdminClient()
 
-    let imageUrl = (formData.get('image_url') as string) || ''
-    const imageFiles = formData.getAll('image') as File[]
-    if (imageFiles.length > 0 && imageFiles[0].size > 0) {
-      try {
-        const urls = await uploadProductImages([imageFiles[0]])
-        imageUrl = urls[0]
-      } catch (e: any) {
-        return { error: `Image upload failed: ${e.message}` }
-      }
-    }
-
     const update: Record<string, any> = {
       title: (formData.get('title') as string) || '',
       link_url: (formData.get('link_url') as string) || null,
       active: formData.get('active') !== 'false',
     }
-    if (imageUrl) update.image_url = imageUrl
+
+    const imageFiles = formData.getAll('image') as File[]
+    if (imageFiles.length > 0 && imageFiles[0].size > 0) {
+      try {
+        const urls = await uploadProductImages([imageFiles[0]])
+        update.image_url = urls[0]
+      } catch (e: any) {
+        return { error: `Image upload failed: ${e.message}` }
+      }
+    }
 
     const { error } = await supabase.from('slider_images').update(update).eq('id', id)
     if (error) return { error: error.message }
