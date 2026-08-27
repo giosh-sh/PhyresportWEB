@@ -1,0 +1,364 @@
+export const siteConfig = {
+  name: "Phyresport",
+  fullName: "Phyresport & Nutrición",
+  description:
+    "Centro de fisioterapia deportiva, osteopatía y rehabilitación en Santa Cruz de Tenerife. Especialistas en EPI Ecoguiada.",
+  url: "https://www.phyresport.com",
+  phone: "664 01 66 79",
+  phoneHref: "tel:664016679",
+  whatsapp: "34664016679",
+  whatsappHref: "https://wa.me/34664016679",
+  email: "info@phyresport.com",
+  address: {
+    street: "Calle Domingo Pérez MiniK, 35",
+    city: "38006 Santa Cruz de Tenerife",
+    region: "Islas Canarias, España",
+  },
+  hours: "Lunes a Viernes: 10:00 – 21:00",
+  cif: "B76702653",
+  social: {
+    facebook: "https://www.facebook.com/Phyresport-1695151087369065/",
+  },
+  logo: "https://www.phyresport.com/images/Logos/LogoPhyresport.png",
+  bonificaTuCurso:
+    "https://www.bonificatucurso.com/centros/phyresport",
+} as const;
+
+export const services = [
+  {
+    slug: "fisioterapia",
+    title: "Fisioterapia — EPI Ecoguiada",
+    shortTitle: "Fisioterapia",
+    eyebrow: "Técnica EPI® Ecoguiada",
+    image: "https://www.phyresport.com/images/Servicios/slide5_03.png",
+    icon: "activity",
+    description:
+      "Electrólisis percutánea intratisular guiada por ecografía. Tratamiento de tendinopatías y lesiones musculoesqueléticas con control en tiempo real.",
+    content: {
+      intro:
+        "Los tendones juegan un papel esencial en el sistema músculo-esquelético mediante la transferencia de cargas de tracción desde el músculo al hueso a fin de permitir movimientos en la articulación y estabilizar las articulaciones.",
+      sections: [
+        {
+          title: "¿Qué es la técnica EPI®?",
+          text: "La técnica EPI® consiste en la aplicación de corriente contínua (CC) a través de una aguja de acupuntura que actúa como electrodo negativo (cátodo) y que, mediante control ecográfico, va a provocar una reacción electroquímica en la región degenerada del tendón y/o cualquier patología del tejido blando.",
+        },
+        {
+          title: "Objetivo principal",
+          text: "Producir un cambio en la configuración molecular del tejido blando afectado, bien sea tendinopatías, lesiones musculares o lesiones ligamentosas. El trasvase del flujo catódico produce una reacción química que normaliza el pH haciendo compatible el metabolismo anabólico del tejido afectado.",
+        },
+        {
+          title: "Patologías tratadas",
+          text: "Tendinopatía de Aquiles, tendinopatía rotuliana, fascitis plantar, epicondilitis, síndrome de la cintilla iliotibial, pubalgias, lesiones musculares, síndrome del túnel carpiano, fibrosis musculares, puntos de gatillo miofascial, lesiones de ligamentos y tendinopatías de tendones sinoviales.",
+        },
+      ],
+    },
+    source: "Dr. Jose Manuel Sánchez-Ibáñez — www.cerede.es" as string | undefined,
+  },
+  {
+    slug: "osteopatia",
+    title: "Osteopatía",
+    shortTitle: "Osteopatía",
+    eyebrow: "Tratamiento global manual",
+    image: "https://www.phyresport.com/images/Servicios/slide6_03.png",
+    icon: "hand",
+    description:
+      "Tratamiento global y manual del sistema musculoesquelético, visceral y craneal. Enfoque integral para restaurar el equilibrio del cuerpo.",
+    content: {
+      intro:
+        "La Osteopatía es una disciplina terapéutica basada en la anatomía y fisiología del cuerpo humano, el conocimiento de cómo intervienen los diferentes tejidos en la producción de la enfermedad, y la aplicación de técnicas de normalización de las funciones alteradas.",
+      sections: [
+        {
+          title: "Osteopatía Estructural",
+          text: "Dirigida al sistema musculoesquelético, donde aplicamos diversas técnicas adaptadas a cada disfunción, a cada tejido, a cada paciente, dándose durante la sesión de tratamiento un continuo análisis y un continuo decidir del Osteópata sobre qué técnica aplicar.",
+        },
+        {
+          title: "Osteopatía Visceral",
+          text: "Orientada a actuar sobre los tejidos que participan en las funciones de las vísceras. Las técnicas manuales viscerales ayudan a liberar interrupciones en el flujo de movilidad, ofreciendo al organismo una base funcional más útil, productiva y saludable.",
+        },
+        {
+          title: "Osteopatía Craneal y Terapia Craneosacra",
+          text: "Liberan y facilitan la micro movilidad del cráneo y el conjunto de la relación craneosacra a través de las membranas meníngeas y el papel del líquido cefalorraquídeo. Indicada para neuralgias, vértigos, migrañas y trastornos digestivos, respiratorios o vasculares.",
+        },
+      ],
+    },
+    source: "Escuela de Osteopatía de Madrid" as string | undefined,
+  },
+  {
+    slug: "podologia",
+    title: "Podología",
+    shortTitle: "Podología",
+    eyebrow: "Cuidado integral del pie",
+    image: "https://www.phyresport.com/images/Servicios/Slide7_02.png",
+    icon: "footprints",
+    description:
+      "Prevención, diagnóstico y tratamiento de problemas del pie. Cuidado integral y su relación con la biomecánica corporal.",
+    content: {
+      intro:
+        "El podólogo es el profesional sanitario que previene, diagnostica y trata los problemas del pie, y se ocupa de su cuidado integral y de su relación con el resto del cuerpo.",
+      sections: [
+        {
+          title: "Quiropodia",
+          text: "Corte de uñas, eliminación de durezas, uñas clavadas, uñeros, etc. También realizamos reconstrucciones estéticas de uñas dañadas.",
+        },
+        {
+          title: "Podología dermatológica",
+          text: "Valoración y tratamiento de todas las alteraciones dérmicas del pie, como verrugas plantares (papilomas), micosis (hongos), etc.",
+        },
+        {
+          title: "Prótesis de silicona",
+          text: "Soluciones para problemas como juanetes, dedos en martillo y otras deformidades del pie.",
+        },
+      ],
+    },
+    source: undefined,
+  },
+  {
+    slug: "terapia-manual",
+    title: "Terapia Manual y Manipulación de la Fascia",
+    shortTitle: "Terapia Manual",
+    eyebrow: "Método Luigi Stecco",
+    image: "https://www.phyresport.com/images/Servicios/slide1_02.png",
+    icon: "waves",
+    description:
+      "Manipulación de la fascia según el método Luigi Stecco. Tratamiento de disfunciones musculoesqueléticas con técnicas manuales avanzadas.",
+    content: {
+      intro:
+        "La Manipulación de la Fascia es una terapia manual desarrollada por Luigi Stecco, fisioterapeuta del norte de Italia. Este método ha evolucionado en los últimos 30 años gracias al estudio y a la práctica clínica en el tratamiento de innumerables casos de problemas músculo-esqueléticos.",
+      sections: [
+        {
+          title: "El sistema miofascial",
+          text: "Esta terapia va dirigida a la fascia, en particular a la fascia profunda muscular, incluyendo el epimisio y los retináculos, y considera que el sistema miofascial es una continuidad tridimensional. El cuerpo se divide en 14 segmentos, cada uno gestionado por seis unidades miofasciales.",
+        },
+        {
+          title: "Centros de Coordinación",
+          text: "Las tracciones musculares convergen en puntos precisos llamados Centros de Coordinación (CC). La localización de cada CC se calcula teniendo en cuenta la suma de las fuerzas vectoriales que actúan durante la ejecución de cada movimiento.",
+        },
+        {
+          title: "Propiocepción y control motor",
+          text: "La fascia profunda es una estructura ideal para percibir y asistir en la organización de los movimientos. Cualquier dificultad en el deslizamiento de la fascia puede alterar la información aferente, provocando movimientos incoordinados.",
+        },
+      ],
+    },
+    source: undefined,
+  },
+  {
+    slug: "plantillas",
+    title: "Plantillas Personalizadas",
+    shortTitle: "Plantillas",
+    eyebrow: "EDSER Orthotics Labs",
+    image: "https://www.phyresport.com/images/Servicios/slide4_02.png",
+    icon: "shoe",
+    description:
+      "Ortesis plantares a medida con más de 30 años de experiencia. Diseño individual combinando métodos tradicionales e innovadores.",
+    content: {
+      intro:
+        "EDSER Orthotics Labs Laboratorios cuenta con más de 30 años de experiencia en la fabricación de ortesis plantares. Combinamos los métodos tradicionales de elaboración ortopédica con métodos de fabricación y materiales innovadores.",
+      sections: [
+        {
+          title: "Tecnología CAD/CAM",
+          text: "Desde hace más de 10 años utilizamos tecnologías CAD/CAM para el diseño exclusivo y fabricación de plantillas personalizadas. Los moldes se escanean usando tecnología láser 3D y las correcciones se diseñan antes de mecanizar.",
+        },
+        {
+          title: "Líneas de ortesis",
+          text: "Versatility (casual), Moda (vestir), Performance (deportiva), Diabéticos, Especiales (UCBL, Gait Plates) y Flopthotics a medida. Cada línea se diferencia por su adaptabilidad y funcionalidad.",
+        },
+        {
+          title: "EdserScann 3D",
+          text: "Ofrecemos el EdserScann 3D desarrollado por nuestros laboratorios para un escaneo volumétrico directo del pie, sin necesidad de moldes tradicionales.",
+        },
+      ],
+    },
+    source: undefined,
+  },
+] as const;
+
+export type Service = (typeof services)[number];
+
+export const team = [
+  {
+    slug: "javier-adrian-gonzalvez-fernandez",
+    name: "Javier A. Gonzálvez",
+    fullName: "Javier Adrián Gonzálvez Fernández",
+    role: "Director — Fisioterapeuta",
+    phone: "",
+    image: "https://www.phyresport.com/images/Equipo/JaviV1.png",
+    description:
+      "Profesor de EPI®. Máster en Fisioterapia Deportiva y Osteopatía. Fisioterapeuta de la selección española de squash.",
+    credentials: [
+      "Diplomado en Fisioterapia — Colegiado 1751",
+      "Profesor de la técnica EPI®",
+      "Máster en Fisioterapia Deportiva",
+      "Máster en Osteopatía por la EOM",
+      "Profesor de Ecografía para Vinno Spain",
+      "Fisioterapeuta de la selección española de squash",
+      "Profesor de postgrado de fisioterapia Invasiva UCAM",
+    ],
+  },
+  {
+    slug: "ruth-gutierrez-gonzalez",
+    name: "Ruth Gutiérrez",
+    fullName: "Ruth Gutiérrez González",
+    role: "Fisioterapeuta",
+    phone: "696 86 37 06",
+    image: "https://www.phyresport.com/images/Equipo/RuthV1.png",
+    description:
+      "Especialista en terapia manual ortopédica y manipulación fascial según el método Stecco.",
+    credentials: [
+      "Grado de Fisioterapia — Colegiada 2404",
+      "Máster en Terapia Manual Ortopédica",
+      "EPI® Nivel 1",
+      "Manipulación Fascial (Stecco) nivel",
+    ],
+  },
+  {
+    slug: "francisco-javier-marichal-garcia",
+    name: "Francisco J. Marichal",
+    fullName: "Francisco Javier Marichal García",
+    role: "Fisioterapeuta",
+    phone: "682 88 64 23",
+    image: "https://www.phyresport.com/images/Equipo/FranciscoJavierV1.png",
+    description:
+      "Formación en técnicas invasivas y ecografía musculoesquelética. Enfoque basado en evidencia.",
+    credentials: [],
+  },
+  {
+    slug: "elisa-rodriguez-lapido",
+    name: "Elisa Rodríguez",
+    fullName: "Elisa Rodríguez Lápido",
+    role: "Fisioterapeuta",
+    phone: "747 86 78 37",
+    image: "https://www.phyresport.com/images/Equipo/3206.png",
+    description:
+      "Especializada en terapia fascial y tratamiento de patologías crónicas del aparato locomotor.",
+    credentials: [],
+  },
+  {
+    slug: "maria-pinto-diaz",
+    name: "María Pinto",
+    fullName: "María Pinto Díaz",
+    role: "Fisioterapeuta",
+    phone: "649 00 32 72",
+    image: "https://www.phyresport.com/images/Equipo/MariaPinto.png",
+    description:
+      "Dedicada a la recuperación funcional y la prevención de lesiones en deportistas y población activa.",
+    credentials: [],
+  },
+  {
+    slug: "orestes-santiago-rodriguez-hernandez",
+    name: "Orestes Santiago",
+    fullName: "Orestes Santiago Rodríguez Hernández",
+    role: "Fisioterapeuta",
+    phone: "636 52 17 97",
+    image: "https://www.phyresport.com/images/Equipo/Orestes.jpg",
+    description:
+      "Formación en fisioterapia deportiva y técnicas manuales. Atención centrada en el retorno seguro al deporte.",
+    credentials: [],
+  },
+  {
+    slug: "luis-garcia-garcia-faria",
+    name: "Luis G. García Faria",
+    fullName: "Luis Garcia Garcia Faria",
+    role: "Fisioterapeuta",
+    phone: "651 95 10 00",
+    image: "https://www.phyresport.com/images/Equipo/Luis.jpg",
+    description: "Fisioterapeuta especializado en rehabilitación deportiva.",
+    credentials: [],
+  },
+] as const;
+
+export type TeamMember = (typeof team)[number];
+
+export const courses = [
+  {
+    slug: "epi-en-neuroeje",
+    title: "EPI en Neuroeje",
+    date: "Septiembre 2026",
+    image:
+      "https://www.phyresport.com/images/Cursos/Curso_EcografiaNeuroeje_Septiembre2026_m.jpg",
+    imageFull:
+      "https://www.phyresport.com/images/Cursos/Curso_EcografiaNeuroeje_Septiembre2026.jpg",
+    programPdf:
+      "https://www.phyresport.com/images/Cursos/Curso_EcografiaNeuroeje_Septiembre2026_Programa.pdf",
+    description:
+      "Ecografía aplicada al neuroeje y técnicas de electrólisis percutánea para el tratamiento de patologías del sistema nervioso periférico.",
+  },
+  {
+    slug: "epi-nivel-i-para-fisioterapeutas",
+    title: "EPI Nivel I para Fisioterapeutas",
+    date: "Octubre 2026",
+    image:
+      "https://www.phyresport.com/images/Cursos/Curso_EPI_NIVEL_I_FisioTerapeutas_Octubre2026_m.jpg",
+    imageFull:
+      "https://www.phyresport.com/images/Cursos/Curso_EPI_NIVEL_I_FisioTerapeutas_Octubre2026.jpg",
+    programPdf:
+      "https://www.phyresport.com/images/Cursos/Curso_EPI_NIVEL_I_FisioTerapeutas_Octubre2026_Programa.pdf",
+    description:
+      "Curso introductorio a la técnica EPI® Ecoguiada. Fundamentos teóricos y práctica clínica con supervisión directa.",
+  },
+] as const;
+
+export const products = [
+  {
+    slug: "dispositivo-epi-pb3s",
+    title: "Dispositivo EPI®-PB3S",
+    image:
+      "https://www.phyresport.com/images/Articulos/Dispositivos/DsipositivoEPIPB3S.jpg",
+    description:
+      "Dispositivo profesional para la aplicación de la técnica EPI® con sistema PB3S de corriente pulsada.",
+    catalogPdf: "https://www.phyresport.com/pdf/Dispositivos/CatalogoEPI PB3S.pdf",
+  },
+  {
+    slug: "salus-talent-pro",
+    title: "Salus Talent Pro",
+    image: "https://www.phyresport.com/images/Productos/salus-talent-pro-sanro_00.jpg",
+    description: "Equipo de radiofrecuencia para terapia física profunda.",
+    catalogPdf: undefined,
+  },
+  {
+    slug: "doctor-tecar-plus",
+    title: "Doctor Tecar Plus",
+    image: "https://www.phyresport.com/images/Productos/DoctorTecarPlus01.png",
+    description: "Dispositivo de terapia Tecar para tratamiento de patologías musculoesqueléticas.",
+    catalogPdf: undefined,
+  },
+  {
+    slug: "impactis-m",
+    title: "IMPACTIS M+",
+    image: "https://www.phyresport.com/images/Productos/impactisM01.jpg",
+    description: "Dispositivo de ondas de choque focales para tratamiento de tendinopatías y calcificaciones.",
+    catalogPdf: undefined,
+  },
+] as const;
+
+export const objectives = [
+  {
+    number: "01",
+    title: "Prevención de lesiones",
+    text: "El fisioterapeuta evaluará el riesgo de lesiones asociado a la participación de los deportistas en deportes específicos o en contextos de actividad física determinados.",
+  },
+  {
+    number: "02",
+    title: "Intervención aguda",
+    text: "Respuesta apropiada en la lesión aguda o enfermedad, tanto en la competición como en el entrenamiento, con la coordinación previa con otros profesionales.",
+  },
+  {
+    number: "03",
+    title: "Rehabilitación",
+    text: "Razonamiento clínico y competencias terapéuticas para realizar el diagnóstico y tratamiento fisioterápico en las lesiones relacionadas con el deporte.",
+  },
+  {
+    number: "04",
+    title: "Mejora del rendimiento",
+    text: "Evaluación del perfil físico y de rendimiento para optimizar las condiciones para el máximo rendimiento en un deporte específico.",
+  },
+  {
+    number: "05",
+    title: "Estilo de vida activo",
+    text: "Colaboración con otros profesionales para promover la participación segura en deportes y actividades para personas de todas las habilidades.",
+  },
+  {
+    number: "06",
+    title: "Aprendizaje continuo",
+    text: "Mantenimiento e incremento de competencias clínicas mediante posición crítica, reflexiva y basada en la evidencia.",
+  },
+] as const;
