@@ -17,12 +17,16 @@ async function checkAdmin() {
 }
 
 export async function bulkDeleteOrders(ids: string[]) {
-  await checkAdmin()
-  const supabase = createAdminClient()
-  const { error } = await supabase.from('orders').delete().in('id', ids)
-  if (error) return { error: error.message }
-  revalidatePath('/admin/orders')
-  return { success: true }
+  try {
+    try { await checkAdmin() } catch { return { error: 'Unauthorized' } }
+    const supabase = createAdminClient()
+    const { error } = await supabase.from('orders').delete().in('id', ids)
+    if (error) return { error: error.message }
+    revalidatePath('/admin/orders')
+    return { success: true }
+  } catch (e: any) {
+    return { error: e?.message || 'Server error' }
+  }
 }
 
 export async function bulkUpdateOrdersStatus(ids: string[], status: OrderStatus) {
