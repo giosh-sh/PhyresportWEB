@@ -15,12 +15,12 @@
   --font-body: var(--font-inter);
   --font-stats: var(--font-space-grotesk);
 
-  /* Admin dark semantic tokens */
-  --color-admin-bg: #0d0d0d;
-  --color-admin-surface: #1a1a1a;
-  --color-admin-border: #2d2d2d;
-  --color-admin-text: #f0f0f0;
-  --color-admin-muted: #666666;
+  /* Admin dark semantic tokens (dinámicos vía variables CSS) */
+  --color-admin-bg: var(--admin-bg, #0d0d0d);
+  --color-admin-surface: var(--admin-surface, #1a1a1a);
+  --color-admin-border: var(--admin-border, #2d2d2d);
+  --color-admin-text: var(--admin-text, #f0f0f0);
+  --color-admin-muted: var(--admin-muted, #666666);
   --color-admin-slate: #6b6d70;
   --color-admin-success: #22c55e;
   --color-admin-warning: #f59e0b;
@@ -79,19 +79,32 @@
   --card-foreground: 30 33% 98%;
   --popover: 0 0% 10%;
   --popover-foreground: 30 33% 98%;
-  --primary: 17 82% 54%;
+  --primary: 189 100% 42%;
   --primary-foreground: 0 0% 100%;
   --secondary: 0 0% 10%;
   --secondary-foreground: 30 33% 98%;
   --muted: 0 0% 10%;
   --muted-foreground: 0 0% 51%;
-  --accent: 17 82% 54%;
+  --accent: 189 100% 42%;
   --accent-foreground: 0 0% 100%;
   --destructive: 0 72% 51%;
   --destructive-foreground: 0 0% 100%;
   --border: 0 0% 18%;
   --input: 0 0% 18%;
-  --ring: 20 86% 57%;
+  --ring: 189 100% 42%;
+}
+
+/* Admin: colores dinámicos aplicados desde /admin/settings > colors */
+[data-theme="dark"][style*="--admin-primary-hsl"] {
+  --primary: var(--admin-primary-hsl);
+  --accent: var(--admin-accent-hsl, var(--admin-primary-hsl));
+  --ring: var(--admin-ring-hsl, var(--admin-primary-hsl));
+}
+
+[data-theme="dark"] {
+  --admin-surface: color-mix(in srgb, var(--admin-bg) 80%, white 5%);
+  --admin-border: color-mix(in srgb, var(--admin-bg) 60%, white 15%);
+  --admin-muted: color-mix(in srgb, var(--admin-bg) 30%, white 45%);
 }
 
 /* ============================================
