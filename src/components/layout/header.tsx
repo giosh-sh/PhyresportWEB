@@ -13,7 +13,7 @@ import type { Category } from "@/types/product";
 const STATIC_LINKS = [
   { href: "/", label: "Inicio" },
   { href: "/cursos", label: "Cursos" },
-  { href: "/shop", label: "Tienda" },
+  { href: "/tienda", label: "Tienda" },
   { href: "/contacto", label: "Contacto" },
 ];
 
@@ -21,7 +21,7 @@ function slugToHref(slug: string): string {
   if (slug === "inicio") return "/";
   if (slug === "servicios") return "/servicios";
   if (slug === "cursos") return "/cursos";
-  if (slug === "phyresport-products" || slug === "productos" || slug === "shop" || slug === "tienda") return "/shop";
+  if (slug === "phyresport-products" || slug === "productos" || slug === "shop" || slug === "tienda") return "/tienda";
   if (slug === "contacto") return "/contacto";
   if (slug === "fisioterapia" || slug === "osteopatia" || slug === "osteopat-a" || slug === "podologia" || slug === "podolog-a" || slug === "terapia-manual" || slug === "plantillas") {
     return `/servicios/${slug.replace("-a", "ia")}`;

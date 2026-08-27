@@ -51,7 +51,7 @@ export async function updateProductStock(id: string, data: { stock_quantity?: nu
   if (error) return { error: error.message }
   revalidatePath("/admin/inventory")
   revalidatePath('/')
-  revalidatePath('/shop')
+  revalidatePath('/tienda')
   return { success: true }
 }
 
@@ -84,6 +84,6 @@ export async function updateVariantStock(id: string, data: { stock_quantity?: nu
 
   revalidatePath("/admin/inventory")
   revalidatePath('/')
-  revalidatePath('/shop')
+  revalidatePath('/tienda')
   return { success: true }
 }
