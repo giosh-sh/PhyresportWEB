@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Image as ImageIcon, Plus, Trash2, Edit, Eye, EyeOff } from 'lucide-react'
+import { Image as ImageIcon, Plus, Trash2, Edit, Eye, EyeOff, GripVertical } from 'lucide-react'
 import Image from 'next/image'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -12,10 +12,11 @@ import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog'
 import {
-  getSliderImages, createSliderImage, updateSliderImage, deleteSliderImage, toggleSliderImageActive,
+  getSliderImages, createSliderImage, updateSliderImage, deleteSliderImage, toggleSliderImageActive, reorderSliderImages,
 } from '@/lib/admin/slider'
 import type { SliderImage } from '@/lib/admin/slider'
 import MediaPicker from '@/components/admin/MediaPicker'
+import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 
 export default function SliderPage() {
@@ -31,6 +32,8 @@ export default function SliderPage() {
   const [formActive, setFormActive] = useState(true)
   const [saving, setSaving] = useState(false)
   const [mediaPicker, setMediaPicker] = useState(false)
+  const [dragId, setDragId] = useState<string | null>(null)
+  const [overId, setOverId] = useState<string | null>(null)
 
   async function load() {
     try {
@@ -109,6 +112,39 @@ export default function SliderPage() {
     else load()
   }
 
+  async function handleDrop(targetId: string) {
+    if (!dragId || dragId === targetId) {
+      setDragId(null)
+      setOverId(null)
+      return
+    }
+
+    const ids = data.map((s) => s.id)
+    const from = ids.indexOf(dragId)
+    const to = ids.indexOf(targetId)
+    if (from < 0 || to < 0) {
+      setDragId(null)
+      setOverId(null)
+      return
+    }
+
+    ids.splice(to, 0, ids.splice(from, 1)[0])
+    const nextData = ids
+      .map((id) => data.find((s) => s.id === id))
+      .filter((s): s is SliderImage => !!s)
+    setData(nextData)
+    setDragId(null)
+    setOverId(null)
+
+    const res = await reorderSliderImages(ids)
+    if (res.error) {
+      toast.error(res.error)
+      load()
+    } else {
+      toast.success('Orden actualizado')
+    }
+  }
+
   if (loading) {
     return (
       <div className="animate-pulse space-y-4">
@@ -137,8 +173,32 @@ export default function SliderPage() {
             </div>
           )}
           {data.map((s) => (
-            <div key={s.id} className="flex items-center justify-between py-3 px-4 rounded-lg hover:bg-accent/5 transition-colors">
+            <div
+              key={s.id}
+              className={cn(
+                'flex items-center justify-between py-3 px-4 rounded-lg hover:bg-accent/5 transition-colors cursor-grab active:cursor-grabbing select-none',
+                dragId === s.id && 'opacity-40',
+                overId === s.id && 'ring-2 ring-primary/50',
+              )}
+              draggable
+              onDragStart={(e) => {
+                setDragId(s.id)
+                e.dataTransfer.effectAllowed = 'move'
+              }}
+              onDragOver={(e) => {
+                e.preventDefault()
+                e.dataTransfer.dropEffect = 'move'
+                setOverId(s.id)
+              }}
+              onDragLeave={() => setOverId((o) => (o === s.id ? null : o))}
+              onDrop={(e) => {
+                e.preventDefault()
+                handleDrop(s.id)
+              }}
+              onDragEnd={() => { setDragId(null); setOverId(null) }}
+            >
               <div className="flex items-center gap-3">
+                <GripVertical size={16} className="text-muted-foreground/50 shrink-0" />
                 <div className="w-24 h-16 rounded bg-muted flex items-center justify-center overflow-hidden shrink-0">
                   {s.image_url ? (
                     <Image
