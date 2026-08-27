@@ -230,6 +230,10 @@ ALTER TABLE user_favorites ENABLE ROW LEVEL SECURITY;
 ALTER TABLE cart_items ENABLE ROW LEVEL SECURITY;
 
 -- RLS POLICIES: lectura pública para catálogo
+DROP POLICY IF EXISTS "anon_read_products" ON products;
+DROP POLICY IF EXISTS "anon_read_product_variants" ON product_variants;
+DROP POLICY IF EXISTS "anon_read_banners" ON banners;
+DROP POLICY IF EXISTS "anon_read_featured_products" ON featured_products;
 CREATE POLICY "anon_read_products" ON products FOR SELECT TO anon USING (true);
 CREATE POLICY "anon_read_product_variants" ON product_variants FOR SELECT TO anon USING (true);
 CREATE POLICY "anon_read_banners" ON banners FOR SELECT TO anon USING (true);
