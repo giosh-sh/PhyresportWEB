@@ -7,7 +7,7 @@ import FavoritesHydrator from "@/components/FavoritesHydrator";
 export default function StoreLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
-      <HeaderWrapper />
+      <HeaderWrapper solid />
       <main className="flex-1">{children}</main>
       <Footer />
       <WhatsAppFloat />
