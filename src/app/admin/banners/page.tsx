@@ -203,43 +203,43 @@ export default function BannersPage() {
           {data.map((b, i) => (
             <Card key={b.id} className={`border-l-4 ${b.active ? 'border-l-admin-success/50' : 'border-l-admin-slate/30'}`}>
               <CardContent className="p-4 lg:p-6 lg:pt-6">
-                <div className="flex items-start gap-4 lg:gap-6">
+                <div className="flex items-start gap-4 lg:gap-4">
                   <div className="flex flex-col items-center gap-1 pt-1">
                     <button onClick={() => moveUp(i)} disabled={i === 0} className="p-1 text-muted-foreground hover:text-foreground disabled:opacity-30">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m18 15-6-6-6 6"/></svg>
                     </button>
-                    <span className="text-[11px] lg:text-sm font-mono text-muted-foreground">{i + 1}</span>
+                    <span className="text-[11px] lg:text-base font-mono text-muted-foreground">{i + 1}</span>
                     <button onClick={() => moveDown(i)} disabled={i === data.length - 1} className="p-1 text-muted-foreground hover:text-foreground disabled:opacity-30">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m6 9 6 6 6-6"/></svg>
                     </button>
                   </div>
-                  <div className="w-40 h-24 lg:w-64 lg:h-36 rounded bg-muted overflow-hidden flex-shrink-0">
+                  <div className="w-40 h-24 lg:w-80 lg:h-44 rounded bg-muted overflow-hidden flex-shrink-0">
                     {b.image_url ? (
                       <img src={b.image_url} alt={b.title} className="w-full h-full object-cover" />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center"><Image size={24} className="text-muted-foreground" /></div>
+                      <div className="w-full h-full flex items-center justify-center"><Image size={28} className="text-muted-foreground" /></div>
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start gap-2 lg:gap-3">
-                      <h3 className="text-sm lg:text-lg font-medium truncate">{b.title}</h3>
-                      <Badge variant="outline" className={`text-[10px] lg:text-xs flex-shrink-0 ${b.active ? 'bg-admin-success/10 text-admin-success' : 'bg-admin-slate/10 text-admin-slate'}`}>
+                      <h3 className="text-sm lg:text-2xl font-semibold truncate">{b.title}</h3>
+                      <Badge variant="outline" className={`text-[10px] lg:text-sm flex-shrink-0 ${b.active ? 'bg-admin-success/10 text-admin-success' : 'bg-admin-slate/10 text-admin-slate'}`}>
                         {b.active ? 'Activo' : 'Inactivo'}
                       </Badge>
                     </div>
-                    {b.subtitle && <p className="text-xs lg:text-sm text-muted-foreground mt-1">{b.subtitle}</p>}
-                    {b.description && <p className="text-xs lg:text-sm text-muted-foreground/60 mt-1 line-clamp-1 lg:line-clamp-2">{b.description}</p>}
-                    {b.link_url && <p className="text-xs lg:text-sm text-blue-400 mt-1 truncate">{b.link_label ?? b.link_url}</p>}
+                    {b.subtitle && <p className="text-xs lg:text-lg text-muted-foreground mt-1">{b.subtitle}</p>}
+                    {b.description && <p className="text-xs lg:text-base text-muted-foreground/60 mt-1 line-clamp-1 lg:line-clamp-3">{b.description}</p>}
+                    {b.link_url && <p className="text-xs lg:text-base text-blue-400 mt-1 truncate">{b.link_label ?? b.link_url}</p>}
                   </div>
                   <div className="flex gap-1 lg:gap-2 flex-shrink-0">
-                    <Button variant="ghost" size="sm" onClick={() => handleToggleActive(b)} className="h-8 w-8 lg:h-10 lg:w-10 p-0">
-                      {b.active ? <EyeOff size={14} /> : <Eye size={14} />}
+                    <Button variant="ghost" size="sm" onClick={() => handleToggleActive(b)} className="h-8 w-8 lg:h-11 lg:w-11 p-0">
+                      {b.active ? <EyeOff size={16} /> : <Eye size={16} />}
                     </Button>
-                    <Button variant="ghost" size="sm" onClick={() => { openEdit(b); setShowAdd(true) }} className="h-8 w-8 lg:h-10 lg:w-10 p-0">
-                      <Edit size={14} />
+                    <Button variant="ghost" size="sm" onClick={() => { openEdit(b); setShowAdd(true) }} className="h-8 w-8 lg:h-11 lg:w-11 p-0">
+                      <Edit size={16} />
                     </Button>
-                    <Button variant="ghost" size="sm" onClick={() => setDeleteId(b.id)} className="h-8 w-8 lg:h-10 lg:w-10 p-0 text-destructive">
-                      <Trash2 size={14} />
+                    <Button variant="ghost" size="sm" onClick={() => setDeleteId(b.id)} className="h-8 w-8 lg:h-11 lg:w-11 p-0 text-destructive">
+                      <Trash2 size={16} />
                     </Button>
                   </div>
                 </div>
