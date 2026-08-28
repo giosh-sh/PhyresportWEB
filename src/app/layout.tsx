@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Sora, Inter, Space_Grotesk } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { siteConfig } from "@/lib/data";
+import CartDrawerWrapper from "@/components/CartDrawerWrapper";
+import FavoritesHydrator from "@/components/FavoritesHydrator";
 import "./globals.css";
 
 const sora = Sora({
@@ -53,7 +55,11 @@ export default function RootLayout({
       className={`${sora.variable} ${inter.variable} ${spaceGrotesk.variable}`}
     >
       <body className="min-h-screen bg-white text-charcoal font-body antialiased">
-        <ClerkProvider>{children}</ClerkProvider>
+        <ClerkProvider>
+          {children}
+          <CartDrawerWrapper />
+          <FavoritesHydrator />
+        </ClerkProvider>
       </body>
     </html>
   );
