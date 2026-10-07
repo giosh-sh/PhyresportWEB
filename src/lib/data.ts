@@ -32,7 +32,7 @@ export const services = [
     title: "Fisioterapia — EPI Ecoguiada",
     shortTitle: "Fisioterapia",
     eyebrow: "Técnica EPI® Ecoguiada",
-    image: "https://www.phyresport.com/images/Servicios/slide5_03.png",
+    image: "/img/epi.jpeg",
     icon: "activity",
     description:
       "Electrólisis percutánea intratisular guiada por ecografía. Tratamiento de tendinopatías y lesiones musculoesqueléticas con control en tiempo real.",

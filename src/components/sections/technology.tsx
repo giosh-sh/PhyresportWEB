@@ -39,7 +39,7 @@ const machines: Machine[] = [
 
 export function TechnologySection() {
   return (
-    <section className="py-24 lg:py-28 bg-ice" id="tecnologia">
+    <section className="py-24 lg:py-28 bg-white" id="tecnologia">
       <div className="mx-auto max-w-7xl px-6">
         <ScrollReveal>
           <div className="text-center mb-16">
@@ -56,19 +56,19 @@ export function TechnologySection() {
           </div>
         </ScrollReveal>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {machines.map((machine, i) => (
             <ScrollReveal key={machine.name} delay={i * 80} className="h-full">
               <article className="h-full flex flex-col bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-md hover:-translate-y-1 transition-all">
                 {/* Image / placeholder */}
-                <div className="relative aspect-[4/3] bg-gradient-to-br from-navy/[0.04] to-cyan/10 flex items-center justify-center">
+                <div className="relative aspect-[4/3] bg-white flex items-center justify-center">
                   {machine.image ? (
                     <Image
                       src={machine.image}
                       alt={machine.name}
                       fill
-                      sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-                      className="object-cover"
+                      sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
+                      className="object-contain p-4"
                       loading="lazy"
                     />
                   ) : (
