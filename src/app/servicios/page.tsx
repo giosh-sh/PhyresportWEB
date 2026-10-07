@@ -11,7 +11,7 @@ import { ArrowRight } from "lucide-react";
 export const metadata: Metadata = {
   title: "Servicios",
   description:
-    "Todos los servicios de Phyresport: fisioterapia, osteopatía y terapia manual.",
+    "Todos los servicios de Phyresport: fisioterapia, terapia manual y descompresión muscular.",
 };
 
 export default function ServiciosPage() {

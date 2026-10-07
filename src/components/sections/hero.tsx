@@ -56,32 +56,28 @@ export async function HeroSection() {
             </p>
 
             <p className="font-stats text-[13px] font-medium tracking-widest uppercase text-teal mb-5 animate-fade-up-delay-1">
-              Fisioterapia avanzada · Dolor crónico
+              Fisioterapia deportiva de precisión
             </p>
 
-            <h1 className="font-display text-[clamp(1.9rem,4.2vw,3.4rem)] font-extrabold leading-[1.12] tracking-tight text-white mb-6 animate-fade-up-delay-2">
-              Fisioterapia Avanzada en el tratamiento del dolor crónico con{" "}
+            <h1 className="font-display text-[clamp(2.5rem,6vw,4.5rem)] font-extrabold leading-[1.08] tracking-tight text-white mb-6 animate-fade-up-delay-2">
+              Tu{" "}
               <span className="relative inline-block">
-                Neuromodulación Percutánea
-                <span className="absolute bottom-1 left-0 w-full h-1.5 bg-gradient-to-r from-teal to-cyan rounded-sm animate-underline-sweep" />
-              </span>{" "}
-              del Sistema Nervioso Periférico y Neuroeje.
+                movimiento
+                <span className="absolute bottom-1 left-0 h-1.5 bg-gradient-to-r from-teal to-cyan rounded-sm animate-underline-sweep" />
+              </span>
+              .<br />
+              Nuestra{" "}
+              <span className="relative inline-block">
+                misión
+                <span className="absolute bottom-1 left-0 h-1.5 bg-gradient-to-r from-teal to-cyan rounded-sm animate-underline-sweep" />
+              </span>
+              .
             </h1>
 
             <p className="text-lg text-white/70 max-w-lg mb-9 animate-fade-up-delay-3">
-              En Phyresport apostamos por una fisioterapia avanzada y especializada en el
-              tratamiento del dolor crónico, las lesiones complejas y las alteraciones del sistema
-              nervioso. Trabajamos sobre el sistema nervioso periférico y el neuroeje mediante
-              técnicas de neuromodulación percutánea bajo control ecográfico y electrólisis del
-              grupo EPI, integrando la tecnología más avanzada para ofrecer tratamientos
-              personalizados y orientados a resultados. Nuestro abordaje se complementa con{" "}
-              <Link
-                href="#tecnologia"
-                className="text-teal font-semibold underline decoration-teal/40 underline-offset-4 hover:text-cyan transition-colors"
-              >
-                dispositivos de alta tecnología
-              </Link>
-              .
+              Rehabilitación, osteopatía y rendimiento deportivo en Santa Cruz de Tenerife.
+              Recupera tu movimiento con la técnica EPI® Ecoguiada y un equipo que entiende tu
+              cuerpo.
             </p>
 
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-12 animate-fade-up-delay-4">

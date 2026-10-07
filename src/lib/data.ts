@@ -57,41 +57,12 @@ export const services = [
     source: "Dr. Jose Manuel Sánchez-Ibáñez — www.cerede.es" as string | undefined,
   },
   {
-    slug: "osteopatia",
-    title: "Osteopatía",
-    shortTitle: "Osteopatía",
-    eyebrow: "Tratamiento global manual",
-    image: "https://www.phyresport.com/images/Servicios/slide6_03.png",
-    icon: "hand",
-    description:
-      "Tratamiento global y manual del sistema musculoesquelético, visceral y craneal. Enfoque integral para restaurar el equilibrio del cuerpo.",
-    content: {
-      intro:
-        "La Osteopatía es una disciplina terapéutica basada en la anatomía y fisiología del cuerpo humano, el conocimiento de cómo intervienen los diferentes tejidos en la producción de la enfermedad, y la aplicación de técnicas de normalización de las funciones alteradas.",
-      sections: [
-        {
-          title: "Osteopatía Estructural",
-          text: "Dirigida al sistema musculoesquelético, donde aplicamos diversas técnicas adaptadas a cada disfunción, a cada tejido, a cada paciente, dándose durante la sesión de tratamiento un continuo análisis y un continuo decidir del Osteópata sobre qué técnica aplicar.",
-        },
-        {
-          title: "Osteopatía Visceral",
-          text: "Orientada a actuar sobre los tejidos que participan en las funciones de las vísceras. Las técnicas manuales viscerales ayudan a liberar interrupciones en el flujo de movilidad, ofreciendo al organismo una base funcional más útil, productiva y saludable.",
-        },
-        {
-          title: "Osteopatía Craneal y Terapia Craneosacra",
-          text: "Liberan y facilitan la micro movilidad del cráneo y el conjunto de la relación craneosacra a través de las membranas meníngeas y el papel del líquido cefalorraquídeo. Indicada para neuralgias, vértigos, migrañas y trastornos digestivos, respiratorios o vasculares.",
-        },
-      ],
-    },
-    source: "Escuela de Osteopatía de Madrid" as string | undefined,
-  },
-  {
     slug: "terapia-manual",
     title: "Terapia Manual y Manipulación de la Fascia",
     shortTitle: "Terapia Manual",
     eyebrow: "Método Luigi Stecco",
     image: "https://www.phyresport.com/images/Servicios/slide1_02.png",
-    icon: "waves",
+    icon: "hand",
     description:
       "Manipulación de la fascia según el método Luigi Stecco. Tratamiento de disfunciones musculoesqueléticas con técnicas manuales avanzadas.",
     content: {
@@ -109,6 +80,31 @@ export const services = [
         {
           title: "Propiocepción y control motor",
           text: "La fascia profunda es una estructura ideal para percibir y asistir en la organización de los movimientos. Cualquier dificultad en el deslizamiento de la fascia puede alterar la información aferente, provocando movimientos incoordinados.",
+        },
+      ],
+    },
+    source: undefined,
+  },
+  {
+    slug: "descompresion-muscular",
+    title: "Descompresión Muscular",
+    shortTitle: "Descompresión",
+    eyebrow: "Tratamiento con dispositivo",
+    image: "/img/Muscle Descompresion.jpeg",
+    icon: "waves",
+    description:
+      "El dispositivo de Descompresión Muscular para un tratamiento muscular preciso y profundo.",
+    content: {
+      intro:
+        "La Descompresión Muscular es un tratamiento que combina tracción y descompresión controlada del tejido para liberar tensiones, mejorar la circulación y favorecer la recuperación muscular.",
+      sections: [
+        {
+          title: "¿En qué consiste?",
+          text: "Mediante un dispositivo específico se aplican fuerzas de descompresión controladas sobre el tejido muscular, favoreciendo la liberación de adherencias, la mejora del flujo sanguíneo y la recuperación de la movilidad.",
+        },
+        {
+          title: "Indicaciones",
+          text: "Contracturas, sobrecargas musculares, recuperación post-esfuerzo, dolor miofascial y tratamientos de recuperación muscular en deportistas y población activa.",
         },
       ],
     },
@@ -214,6 +210,12 @@ export const team = [
 ] as const;
 
 export type TeamMember = (typeof team)[number];
+
+export const founderExperience = {
+  slug: "javier-adrian-gonzalvez-fernandez",
+  title: "Más de 15 años a la vanguardia de la fisioterapia avanzada",
+  text: "Javier Adrián González Fernández es profesor del Grupo EPI Advanced desde 2014 y uno de los pioneros en Canarias en la aplicación de la electrólisis percutánea del Grupo EPI, técnica que incorporó a su práctica clínica desde 2010. Fue además uno de los primeros profesionales en Canarias en apostar por esta tecnología, acumulando una amplia experiencia clínica y docente en fisioterapia avanzada y tratamiento del dolor y Fisioterapeuta de la selección española de Squash.",
+} as const;
 
 export const courses = [
   {

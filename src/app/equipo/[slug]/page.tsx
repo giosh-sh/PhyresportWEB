@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
-import { team, siteConfig } from "@/lib/data";
+import { team, siteConfig, founderExperience } from "@/lib/data";
 import HeaderWrapper from "@/components/layout/header-wrapper";
 import { Footer } from "@/components/layout/footer";
 import { WhatsAppFloat } from "@/components/ui/whatsapp-float";
@@ -47,7 +47,7 @@ export default async function TeamMemberPage({ params }: Props) {
         <section className="pt-28 pb-16 lg:pt-36 lg:pb-24 bg-white border-b border-gray-100">
           <div className="mx-auto max-w-6xl px-6">
             <Link
-              href="/equipo"
+              href="/#equipo"
               className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-teal mb-10 transition-colors focus-visible:text-teal"
             >
               <ArrowLeft className="w-4 h-4" aria-hidden />
@@ -108,6 +108,22 @@ export default async function TeamMemberPage({ params }: Props) {
         {/* Credentials / First visit */}
         <section className="py-16 lg:py-24">
           <div className="mx-auto max-w-6xl px-6">
+            {member.slug === founderExperience.slug && (
+              <ScrollReveal>
+                <div className="max-w-3xl mb-12 lg:mb-16">
+                  <p className="font-stats text-xs font-semibold text-teal uppercase tracking-[0.2em] mb-3">
+                    Experiencia
+                  </p>
+                  <h2 className="font-display text-2xl lg:text-3xl font-bold text-navy mb-5">
+                    {founderExperience.title}
+                  </h2>
+                  <p className="text-lg text-gray-500 leading-relaxed">
+                    {founderExperience.text}
+                  </p>
+                </div>
+              </ScrollReveal>
+            )}
+
             {member.credentials.length > 0 ? (
               <ScrollReveal>
                 <div className="max-w-3xl">
