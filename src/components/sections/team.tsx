@@ -29,7 +29,7 @@ export function TeamSection() {
               className="w-full sm:w-[calc(50%-1rem)] lg:w-[calc(25%-1.5rem)]"
             >
               <Link
-                href="/equipo"
+                href={`/equipo/${member.slug}`}
                 className="group block text-center p-6 rounded-xl hover:bg-ice transition-all"
               >
                 <div className="relative w-[140px] h-[140px] mx-auto mb-5">

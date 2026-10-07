@@ -1,7 +1,6 @@
 import HeaderWrapper from "@/components/layout/header-wrapper";
 import { Footer } from "@/components/layout/footer";
 import { HeroSection } from "@/components/sections/hero";
-import { ExperienceSection } from "@/components/sections/experience";
 import { TechnologySection } from "@/components/sections/technology";
 import { GymSection } from "@/components/sections/gym";
 import AboutSection from "@/components/sections/about";
@@ -17,7 +16,6 @@ export default function HomePage() {
       <HeaderWrapper />
       <main>
         <HeroSection />
-        <ExperienceSection />
         <TechnologySection />
         <GymSection />
         <AboutSection />
