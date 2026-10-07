@@ -1,5 +1,5 @@
+import Image from "next/image";
 import { ScrollReveal } from "@/components/ui/scroll-reveal";
-import { ImageIcon } from "lucide-react";
 
 export function GymSection() {
   return (
@@ -25,19 +25,18 @@ export function GymSection() {
             </p>
           </ScrollReveal>
 
-          {/* Gallery placeholder */}
-          {/* TODO: sustituir estos huecos por la galería real de fotos de la zona */}
+          {/* Image */}
+          {/* TODO: sustituir por la galería completa de la zona cuando haya más fotos */}
           <ScrollReveal delay={150}>
-            <div className="grid grid-cols-2 gap-4">
-              {[0, 1, 2, 3].map((i) => (
-                <div
-                  key={i}
-                  className="aspect-video rounded-xl border border-dashed border-white/20 bg-white/5 flex items-center justify-center text-white/40"
-                  aria-hidden
-                >
-                  <ImageIcon className="w-6 h-6" aria-hidden />
-                </div>
-              ))}
+            <div className="relative aspect-[4/3] rounded-2xl overflow-hidden shadow-[0_24px_80px_rgba(0,0,0,0.35)]">
+              <Image
+                src="/img/maria-3.jpeg"
+                alt="María Pinto en la zona de Gym y Readaptación de Phyresport"
+                fill
+                sizes="(min-width: 1024px) 560px, 100vw"
+                className="object-cover"
+                loading="lazy"
+              />
             </div>
           </ScrollReveal>
         </div>

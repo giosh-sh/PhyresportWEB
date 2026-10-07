@@ -12,23 +12,28 @@ interface Machine {
 const machines: Machine[] = [
   {
     name: "SIMAI",
-    image: null, // TODO: añadir foto en /public/img y su ruta aquí
+    image: "/img/simai.jpeg",
     text: "SIMAI es una tecnología avanzada basada en campos electromagnéticos de alta intensidad, capaz de actuar de forma profunda sobre el sistema neuromuscular. Permite trabajar el dolor, la activación y recuperación muscular y la función neuromotora, complementando nuestros tratamientos de fisioterapia avanzada.",
   },
   {
     name: "K-Laser Cube Plus 30",
-    image: null, // TODO: añadir foto en /public/img y su ruta aquí
+    image: "/img/k-laser-cube-plus-30.jpeg",
     text: "K-Laser Cube Plus 30 es un sistema de láser terapéutico de alta potencia diseñado para actuar de forma profunda y precisa sobre los tejidos. Su aplicación se integra en el tratamiento del dolor, procesos inflamatorios, lesiones musculares y tendinosas y recuperación funcional, favoreciendo la respuesta biológica y la recuperación de los tejidos. Una tecnología avanzada, no invasiva y adaptable a las necesidades de cada paciente.",
   },
   {
     name: "Impactis M",
-    image: null, // TODO: añadir foto en /public/img y su ruta aquí
+    image: "/img/impactis-m.jpeg",
     text: "Impactis M es un sistema de ondas de choque radiales utilizado en fisioterapia avanzada para el tratamiento de diferentes dolores y lesiones musculoesqueléticas, especialmente en tendones, músculos y tejidos blandos. Su aplicación mediante ondas mecánicas de alta energía permite estimular los tejidos, mejorar la respuesta local y favorecer los procesos de recuperación, integrándose en tratamientos personalizados según las necesidades de cada paciente.",
   },
   {
     name: "Doctor Tecar Plus",
-    image: null, // TODO: añadir foto en /public/img y su ruta aquí
+    image: "/img/doctor-tecar-plus.jpeg",
     text: "Doctor Tecar Plus es un sistema de diatermia capacitiva y resistiva que utiliza radiofrecuencia para generar un efecto térmico profundo y controlado en los tejidos. Se integra en el tratamiento del dolor, lesiones musculares y tendinosas y procesos de recuperación funcional, favoreciendo la circulación y la respuesta fisiológica de los tejidos. Una tecnología avanzada que permite personalizar la intensidad y profundidad del tratamiento según las necesidades de cada paciente.",
+  },
+  {
+    name: "Descompresión Muscular",
+    image: "/img/muscle-descompresion.jpeg",
+    text: "El dispositivo de Descompresión Muscular para un tratamiento muscular preciso y profundo. Combina tracción y descompresión controlada del tejido para liberar tensiones, mejorar la circulación y favorecer la recuperación muscular.",
   },
 ];
 
@@ -42,7 +47,7 @@ export function TechnologySection() {
               Tecnología
             </p>
             <h2 className="font-display text-[clamp(1.75rem,3.5vw,2.75rem)] font-bold leading-tight tracking-tight text-charcoal mb-4">
-              Nuestro equipamiento
+              Nuestra tecnología
             </h2>
             <p className="text-lg text-gray-500 max-w-xl mx-auto">
               Dispositivos de alta tecnología que nos permiten ofrecer un tratamiento preciso,
@@ -51,7 +56,7 @@ export function TechnologySection() {
           </div>
         </ScrollReveal>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {machines.map((machine, i) => (
             <ScrollReveal key={machine.name} delay={i * 80} className="h-full">
               <article className="h-full flex flex-col bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-md hover:-translate-y-1 transition-all">
@@ -62,7 +67,7 @@ export function TechnologySection() {
                       src={machine.image}
                       alt={machine.name}
                       fill
-                      sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
+                      sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
                       className="object-cover"
                       loading="lazy"
                     />

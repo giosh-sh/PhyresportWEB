@@ -16,9 +16,9 @@ export default function HomePage() {
       <HeaderWrapper />
       <main>
         <HeroSection />
-        <TechnologySection />
-        <GymSection />
         <AboutSection />
+        <GymSection />
+        <TechnologySection />
         <ServicesSection />
         <TeamSection />
         <CoursesSection />

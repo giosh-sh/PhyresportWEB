@@ -90,7 +90,7 @@ export const services = [
     title: "Descompresión Muscular",
     shortTitle: "Descompresión",
     eyebrow: "Tratamiento con dispositivo",
-    image: "/img/Muscle Descompresion.jpeg",
+    image: "/img/muscle-descompresion.jpeg",
     icon: "waves",
     description:
       "El dispositivo de Descompresión Muscular para un tratamiento muscular preciso y profundo.",
@@ -178,7 +178,7 @@ export const team = [
     fullName: "María Pinto Díaz",
     role: "Nutrición clínica y readaptación",
     phone: "649 00 32 72",
-    image: "/img/image_0eeea3.png",
+    image: "/img/maria-1.png",
     description:
       "Nutrición clínica en Oncología y valoración morfofuncional (pacientes desnutridos).",
     credentials: [
@@ -250,7 +250,7 @@ export const products = [
   {
     slug: "dispositivo-epi-pb3s",
     title: "Dispositivo EPI®-PB3S",
-    image: "/img/EPI.jpeg",
+    image: "/img/epi.jpeg",
     description:
       "Dispositivo profesional para la aplicación de la técnica EPI® con sistema PB3S de corriente pulsada.",
     catalogPdf: "https://www.phyresport.com/pdf/Dispositivos/CatalogoEPI PB3S.pdf",
