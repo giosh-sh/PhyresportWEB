@@ -91,10 +91,11 @@ export async function reorderCategories(orderedIds: string[]) {
   }
 
   revalidatePath("/admin/categories");
+  revalidatePath("/", "layout");
   return { success: true };
 }
 
-export async function createCategory(data: { name: string; parent_id?: string; description?: string; image?: string; is_collection?: boolean }) {
+export async function createCategory(data: { name: string; parent_id?: string; description?: string; image?: string; url?: string; is_collection?: boolean }) {
   await checkAdmin();
   const supabase = createAdminClient();
 
@@ -107,15 +108,17 @@ export async function createCategory(data: { name: string; parent_id?: string; d
     parent_id: data.parent_id ?? null,
     description: data.description ?? "",
     image: data.image ?? "",
+    url: data.url?.trim() ?? "",
     is_collection: data.is_collection ?? false,
   });
 
   if (error) return { error: error.message };
   revalidatePath("/admin/categories");
+  revalidatePath("/", "layout");
   return { success: true };
 }
 
-export async function updateCategory(id: string, data: { name: string; parent_id?: string | null; description?: string; image?: string; is_collection?: boolean }) {
+export async function updateCategory(id: string, data: { name: string; parent_id?: string | null; description?: string; image?: string; url?: string; is_collection?: boolean }) {
   await checkAdmin();
   const supabase = createAdminClient();
 
@@ -130,12 +133,14 @@ export async function updateCategory(id: string, data: { name: string; parent_id
       parent_id: data.parent_id ?? null,
       description: data.description ?? "",
       image: data.image ?? "",
+      url: data.url?.trim() ?? "",
       is_collection: data.is_collection ?? false,
     })
     .eq("id", id);
 
   if (error) return { error: error.message };
   revalidatePath("/admin/categories");
+  revalidatePath("/", "layout");
   return { success: true };
 }
 
@@ -164,6 +169,7 @@ export async function deleteCategory(id: string) {
     return { error: e.message };
   }
   revalidatePath("/admin/categories");
+  revalidatePath("/", "layout");
   return { success: true };
 }
 

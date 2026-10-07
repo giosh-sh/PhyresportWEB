@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS categories (
   parent_id UUID REFERENCES categories(id) ON DELETE SET NULL,
   description TEXT DEFAULT '',
   image TEXT DEFAULT '',
+  url TEXT NOT NULL DEFAULT '',
   is_collection BOOLEAN DEFAULT false,
   sort_order INTEGER NOT NULL DEFAULT 0,
   created_at TIMESTAMPTZ DEFAULT now()

@@ -23,7 +23,7 @@ export default function AdminCategoriesPage() {
   const [showAdd, setShowAdd] = useState(false)
   const [editing, setEditing] = useState<AdminCategory | null>(null)
   const [deleteId, setDeleteId] = useState<string | null>(null)
-  const [form, setForm] = useState({ name: '', parent_id: '', description: '', is_collection: false })
+  const [form, setForm] = useState({ name: '', parent_id: '', description: '', url: '', is_collection: false })
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState('')
   const [saving, setSaving] = useState(false)
@@ -43,7 +43,7 @@ export default function AdminCategoriesPage() {
   useEffect(() => { load() }, [])
 
   function openAdd(parentId = '') {
-    setForm({ name: '', parent_id: parentId, description: '', is_collection: false })
+    setForm({ name: '', parent_id: parentId, description: '', url: '', is_collection: false })
     setImageFile(null)
     setImagePreview('')
     setEditing(null)
@@ -55,6 +55,7 @@ export default function AdminCategoriesPage() {
       name: cat.name,
       parent_id: cat.parent_id ?? '',
       description: cat.description ?? '',
+      url: cat.url ?? '',
       is_collection: cat.is_collection ?? false,
     })
     setImagePreview(cat.image ?? '')
@@ -77,6 +78,7 @@ export default function AdminCategoriesPage() {
         parent_id: form.parent_id || undefined,
         description: form.description,
         image,
+        url: form.url,
         is_collection: form.is_collection,
       }
 
@@ -201,7 +203,9 @@ export default function AdminCategoriesPage() {
                   <Badge variant="outline" className="text-[10px]">Colección</Badge>
                 )}
               </div>
-              <p className="text-xs text-muted-foreground">/{cat.slug}</p>
+              <p className="text-xs text-muted-foreground">
+                {cat.url ? `Enlace → ${cat.url}` : `Productos · /categoria/${cat.slug}`}
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -302,6 +306,21 @@ export default function AdminCategoriesPage() {
                 value={form.description}
                 onChange={(e) => setForm({ ...form, description: e.target.value })}
               />
+            </div>
+
+            <div>
+              <Label htmlFor="cat_url">Enlace / URL de destino</Label>
+              <Input
+                id="cat_url"
+                value={form.url}
+                placeholder="/servicios/fisioterapia"
+                onChange={(e) => setForm({ ...form, url: e.target.value })}
+              />
+              <p className="mt-1 text-xs text-muted-foreground">
+                Déjalo vacío si es una <strong>categoría de productos</strong>: enlazará al listado
+                de sus productos. Rellénalo para un <strong>enlace directo</strong> (por ejemplo
+                /servicios/fisioterapia o /cursos).
+              </p>
             </div>
 
             <div>
