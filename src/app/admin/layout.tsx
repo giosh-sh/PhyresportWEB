@@ -12,7 +12,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     return redirectToSignIn()
   }
 
-  if (!isAdmin(userId)) {
+  if (!(await isAdmin(userId))) {
     redirect('/')
   }
 

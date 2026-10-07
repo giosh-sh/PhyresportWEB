@@ -23,7 +23,7 @@ function slugToHref(slug: string): string {
   if (slug === "cursos") return "/cursos";
   if (slug === "phyresport-products" || slug === "productos" || slug === "shop" || slug === "tienda") return "/tienda";
   if (slug === "contacto") return "/contacto";
-  if (slug === "fisioterapia" || slug === "osteopatia" || slug === "osteopat-a" || slug === "podologia" || slug === "podolog-a" || slug === "terapia-manual" || slug === "plantillas") {
+  if (slug === "fisioterapia" || slug === "osteopatia" || slug === "osteopat-a" || slug === "terapia-manual") {
     return `/servicios/${slug.replace("-a", "ia")}`;
   }
   return `/categoria/${slug}`;
@@ -307,15 +307,8 @@ function CartButton({ mobile }: { mobile?: boolean }) {
 
 function AdminLink({ mobile }: { mobile?: boolean }) {
   const { isSignedIn, user } = useUser();
-  const adminIds = (
-    process.env.NEXT_PUBLIC_ADMIN_USER_IDS ||
-    process.env.NEXT_PUBLIC_ADMIN_USER_ID ||
-    ""
-  )
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean);
-  const isAdmin = isSignedIn && !!user?.id && adminIds.includes(user.id);
+  const role = (user?.publicMetadata as { role?: string } | undefined)?.role;
+  const isAdmin = !!isSignedIn && role === "admin";
 
   if (!isAdmin) return null;
 

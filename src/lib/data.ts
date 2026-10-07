@@ -86,35 +86,6 @@ export const services = [
     source: "Escuela de Osteopatía de Madrid" as string | undefined,
   },
   {
-    slug: "podologia",
-    title: "Podología",
-    shortTitle: "Podología",
-    eyebrow: "Cuidado integral del pie",
-    image: "https://www.phyresport.com/images/Servicios/Slide7_02.png",
-    icon: "footprints",
-    description:
-      "Prevención, diagnóstico y tratamiento de problemas del pie. Cuidado integral y su relación con la biomecánica corporal.",
-    content: {
-      intro:
-        "El podólogo es el profesional sanitario que previene, diagnostica y trata los problemas del pie, y se ocupa de su cuidado integral y de su relación con el resto del cuerpo.",
-      sections: [
-        {
-          title: "Quiropodia",
-          text: "Corte de uñas, eliminación de durezas, uñas clavadas, uñeros, etc. También realizamos reconstrucciones estéticas de uñas dañadas.",
-        },
-        {
-          title: "Podología dermatológica",
-          text: "Valoración y tratamiento de todas las alteraciones dérmicas del pie, como verrugas plantares (papilomas), micosis (hongos), etc.",
-        },
-        {
-          title: "Prótesis de silicona",
-          text: "Soluciones para problemas como juanetes, dedos en martillo y otras deformidades del pie.",
-        },
-      ],
-    },
-    source: undefined,
-  },
-  {
     slug: "terapia-manual",
     title: "Terapia Manual y Manipulación de la Fascia",
     shortTitle: "Terapia Manual",
@@ -138,35 +109,6 @@ export const services = [
         {
           title: "Propiocepción y control motor",
           text: "La fascia profunda es una estructura ideal para percibir y asistir en la organización de los movimientos. Cualquier dificultad en el deslizamiento de la fascia puede alterar la información aferente, provocando movimientos incoordinados.",
-        },
-      ],
-    },
-    source: undefined,
-  },
-  {
-    slug: "plantillas",
-    title: "Plantillas Personalizadas",
-    shortTitle: "Plantillas",
-    eyebrow: "EDSER Orthotics Labs",
-    image: "https://www.phyresport.com/images/Servicios/slide4_02.png",
-    icon: "shoe",
-    description:
-      "Ortesis plantares a medida con más de 30 años de experiencia. Diseño individual combinando métodos tradicionales e innovadores.",
-    content: {
-      intro:
-        "EDSER Orthotics Labs Laboratorios cuenta con más de 30 años de experiencia en la fabricación de ortesis plantares. Combinamos los métodos tradicionales de elaboración ortopédica con métodos de fabricación y materiales innovadores.",
-      sections: [
-        {
-          title: "Tecnología CAD/CAM",
-          text: "Desde hace más de 10 años utilizamos tecnologías CAD/CAM para el diseño exclusivo y fabricación de plantillas personalizadas. Los moldes se escanean usando tecnología láser 3D y las correcciones se diseñan antes de mecanizar.",
-        },
-        {
-          title: "Líneas de ortesis",
-          text: "Versatility (casual), Moda (vestir), Performance (deportiva), Diabéticos, Especiales (UCBL, Gait Plates) y Flopthotics a medida. Cada línea se diferencia por su adaptabilidad y funcionalidad.",
-        },
-        {
-          title: "EdserScann 3D",
-          text: "Ofrecemos el EdserScann 3D desarrollado por nuestros laboratorios para un escaneo volumétrico directo del pie, sin necesidad de moldes tradicionales.",
         },
       ],
     },
@@ -238,12 +180,15 @@ export const team = [
     slug: "maria-pinto-diaz",
     name: "María Pinto",
     fullName: "María Pinto Díaz",
-    role: "Fisioterapeuta",
+    role: "Nutrición clínica y readaptación",
     phone: "649 00 32 72",
-    image: "https://www.phyresport.com/images/Equipo/MariaPinto.png",
+    image: "/img/image_0eeea3.png",
     description:
-      "Dedicada a la recuperación funcional y la prevención de lesiones en deportistas y población activa.",
-    credentials: [],
+      "Nutrición clínica en Oncología y valoración morfofuncional (pacientes desnutridos).",
+    credentials: [
+      "Máster Readaptación de Lesiones y Entrenamiento",
+      "Técnico superior en dietética y nutrición",
+    ],
   },
   {
     slug: "orestes-santiago-rodriguez-hernandez",
@@ -303,8 +248,7 @@ export const products = [
   {
     slug: "dispositivo-epi-pb3s",
     title: "Dispositivo EPI®-PB3S",
-    image:
-      "https://www.phyresport.com/images/Articulos/Dispositivos/DsipositivoEPIPB3S.jpg",
+    image: "/img/EPI.jpeg",
     description:
       "Dispositivo profesional para la aplicación de la técnica EPI® con sistema PB3S de corriente pulsada.",
     catalogPdf: "https://www.phyresport.com/pdf/Dispositivos/CatalogoEPI PB3S.pdf",

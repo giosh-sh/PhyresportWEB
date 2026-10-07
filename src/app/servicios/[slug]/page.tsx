@@ -6,10 +6,8 @@ import {
   Activity,
   ArrowLeft,
   ArrowRight,
-  Footprints,
   Hand,
   Phone,
-  Ruler,
   Waves,
   type LucideIcon,
 } from "lucide-react";
@@ -26,9 +24,7 @@ interface Props {
 const serviceIcons: Record<string, LucideIcon> = {
   activity: Activity,
   hand: Hand,
-  footprints: Footprints,
   waves: Waves,
-  shoe: Ruler,
 };
 
 export async function generateStaticParams() {

@@ -11,7 +11,7 @@ import { Phone, ArrowUpRight } from "lucide-react";
 export const metadata: Metadata = {
   title: "Nuestro Equipo",
   description:
-    "Conoce al equipo de fisioterapeutas, osteópatas y podólogos de Phyresport en Santa Cruz de Tenerife.",
+    "Conoce al equipo de fisioterapeutas, osteópatas y especialistas en nutrición de Phyresport en Santa Cruz de Tenerife.",
 };
 
 const disciplines = [
@@ -39,7 +39,7 @@ export default function EquipoPage() {
               <div className="h-full bg-teal animate-draw-line" />
             </div>
             <p className="mt-8 text-lg text-white/70 max-w-xl animate-fade-up-delay-3">
-              Siete especialistas en fisioterapia, osteopatía y podología. Formación continua,
+              Siete especialistas en fisioterapia, osteopatía y terapia manual. Formación continua,
               técnica EPI® Ecoguiada y un objetivo: que vuelvas a moverte sin dolor.
             </p>
             <div className="mt-10 flex flex-wrap items-center gap-x-8 gap-y-3 font-stats text-sm text-white/60 animate-fade-up-delay-4">
