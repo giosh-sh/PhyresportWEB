@@ -75,9 +75,9 @@ export async function HeroSection() {
             </h1>
 
             <p className="text-lg text-white/70 max-w-lg mb-9 animate-fade-up-delay-3">
-              Rehabilitación, osteopatía y rendimiento deportivo en Santa Cruz de Tenerife.
-              Recupera tu movimiento con la técnica EPI® Ecoguiada y un equipo que entiende tu
-              cuerpo.
+              Rehabilitación, terapia manual, tratamiento con la Muscle descompresión y
+              rendimiento deportivo en Santa Cruz de Tenerife. Recupera tu movimiento con la
+              técnica EPI® Ecoguiada y un equipo que entiende tu cuerpo.
             </p>
 
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-12 animate-fade-up-delay-4">
