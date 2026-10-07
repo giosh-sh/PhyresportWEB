@@ -165,16 +165,26 @@ export const getFeaturedProducts = cache(async (): Promise<Product[]> => {
 export const getCategories = cache(async (rootOnly?: boolean): Promise<Category[]> => {
   try {
     const supabase = getSupabaseClient();
-    let q = supabase
-      .from("categories")
-      .select("id, name, slug, parent_id")
-      .order("sort_order", { ascending: true })
-      .order("name");
-    if (rootOnly) q = q.is("parent_id", null);
-    const { data, error } = await q;
+    const query = (columns: string) => {
+      let q = supabase
+        .from("categories")
+        .select(columns)
+        .order("sort_order", { ascending: true })
+        .order("name");
+      if (rootOnly) q = q.is("parent_id", null);
+      return q;
+    };
+
+    // Intento con `url`; si la columna aún no existe, reintento sin ella.
+    let { data, error } = await query("id, name, slug, parent_id, url");
     if (error) {
-      const fallback = await supabase.from("categories").select("id, name, slug, parent_id").order("name");
-      return (fallback.data ?? []) as Category[];
+      const retry = await query("id, name, slug, parent_id");
+      if (retry.error) {
+        const fallback = await supabase.from("categories").select("id, name, slug, parent_id").order("name");
+        data = fallback.data;
+      } else {
+        data = retry.data;
+      }
     }
     return (data ?? []) as Category[];
   } catch {

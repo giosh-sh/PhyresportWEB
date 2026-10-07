@@ -132,6 +132,7 @@ export interface AdminCategory {
   parent_id: string | null;
   description: string;
   image: string;
+  url: string;
   is_collection: boolean;
   sort_order?: number;
   product_count: number;

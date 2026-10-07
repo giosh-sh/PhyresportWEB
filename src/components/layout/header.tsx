@@ -29,6 +29,12 @@ function slugToHref(slug: string): string {
   return `/categoria/${slug}`;
 }
 
+function categoryHref(cat: Category): string {
+  const url = cat.url?.trim();
+  if (url) return url;
+  return slugToHref(cat.slug);
+}
+
 export function Header({
   solid = false,
   categories = [],
@@ -57,7 +63,7 @@ export function Header({
   const rootCategories = categories.filter((c) => !c.parent_id);
 
   const navItems = [
-    ...rootCategories.map((c) => ({ ...c, href: slugToHref(c.slug) })),
+    ...rootCategories.map((c) => ({ ...c, href: categoryHref(c) })),
     ...STATIC_LINKS,
   ].filter(
     (item, index, arr) =>
@@ -102,7 +108,7 @@ export function Header({
               return (
                 <Link
                   key={href || cat!.id}
-                  href={href || slugToHref(cat!.slug)}
+                  href={href || categoryHref(cat!)}
                   className="font-display text-sm font-medium text-white/75 hover:text-white transition-colors relative after:absolute after:bottom-[-4px] after:left-0 after:w-0 after:h-0.5 after:bg-teal after:transition-all hover:after:w-full"
                 >
                   {label || cat!.name}
@@ -358,7 +364,7 @@ function CategoryDropdown({ category }: { category: Category }) {
       onMouseLeave={() => setOpen(false)}
     >
       <Link
-        href={slugToHref(category.slug)}
+        href={categoryHref(category)}
         aria-expanded={open}
         className="inline-flex items-center gap-1 font-display text-sm font-medium text-white/75 hover:text-white transition-colors relative after:absolute after:bottom-[-4px] after:left-0 after:w-0 after:h-0.5 after:bg-teal after:transition-all hover:after:w-full"
       >
@@ -375,7 +381,7 @@ function CategoryDropdown({ category }: { category: Category }) {
             {(category.children ?? []).map((child) => (
               <Link
                 key={child.id}
-                href={slugToHref(child.slug)}
+                href={categoryHref(child)}
                 className="block rounded-lg px-4 py-2.5 text-sm font-medium text-navy hover:bg-ice hover:text-teal transition-colors"
               >
                 {child.name}
