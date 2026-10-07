@@ -4,9 +4,7 @@ import { ScrollReveal } from "@/components/ui/scroll-reveal";
 import {
   Activity,
   Hand,
-  Footprints,
   Waves,
-  SportShoe,
   BookOpen,
   ArrowRight,
 } from "lucide-react";
@@ -14,9 +12,7 @@ import {
 const iconMap: Record<string, React.ElementType> = {
   activity: Activity,
   hand: Hand,
-  footprints: Footprints,
   waves: Waves,
-  shoe: SportShoe,
   book: BookOpen,
 };
 

@@ -1,12 +1,8 @@
-import { auth } from "@clerk/nextjs/server";
+import { auth, clerkClient } from "@clerk/nextjs/server";
 
-export function isAdmin(userId: string | null | undefined): boolean {
+function isEnvAdmin(userId: string | null | undefined): boolean {
   if (!userId) return false;
-  const raw =
-    process.env.ADMIN_USER_IDS ||
-    process.env.ADMIN_USER_ID ||
-    process.env.NEXT_PUBLIC_ADMIN_USER_ID ||
-    "";
+  const raw = process.env.ADMIN_USER_IDS || process.env.ADMIN_USER_ID || "";
   return raw
     .split(",")
     .map((s) => s.trim())
@@ -14,8 +10,21 @@ export function isAdmin(userId: string | null | undefined): boolean {
     .includes(userId);
 }
 
+export async function isAdmin(userId: string | null | undefined): Promise<boolean> {
+  if (!userId) return false;
+  if (isEnvAdmin(userId)) return true;
+  try {
+    const client = await clerkClient();
+    const user = await client.users.getUser(userId);
+    const role = (user.publicMetadata as { role?: string } | undefined)?.role;
+    return role === "admin";
+  } catch {
+    return false;
+  }
+}
+
 export async function requireAdmin(): Promise<string> {
   const { userId } = await auth();
-  if (!isAdmin(userId)) throw new Error("Unauthorized");
+  if (!(await isAdmin(userId))) throw new Error("Unauthorized");
   return userId!;
 }
