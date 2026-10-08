@@ -317,9 +317,11 @@ export default function AdminCategoriesPage() {
                 onChange={(e) => setForm({ ...form, url: e.target.value })}
               />
               <p className="mt-1 text-xs text-muted-foreground">
-                Déjalo vacío si es una <strong>categoría de productos</strong>: enlazará al listado
-                de sus productos. Rellénalo para un <strong>enlace directo</strong> (por ejemplo
-                /servicios/fisioterapia o /cursos).
+                <strong>Enlace directo a una página</strong>: rellénalo (por ejemplo{' '}
+                <code>/servicios/fisioterapia</code>, <code>/cursos</code>,{' '}
+                <code>/contacto</code> o una URL externa <code>https://…</code>).{' '}
+                <strong>Grupo de productos de la tienda</strong>: déjalo vacío y marca la casilla
+                de colección más abajo; enlazará a <code>/categoria/&lt;slug&gt;</code>.
               </p>
             </div>
 
@@ -357,7 +359,7 @@ export default function AdminCategoriesPage() {
                 onChange={(e) => setForm({ ...form, is_collection: e.target.checked })}
                 className="rounded border-input"
               />
-              <Label htmlFor="is_collection" className="mb-0">Marcar como colección</Label>
+              <Label htmlFor="is_collection" className="mb-0">Es un grupo de productos (colección)</Label>
             </div>
           </div>
 

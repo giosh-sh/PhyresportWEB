@@ -56,7 +56,7 @@ export function TechnologySection() {
           </div>
         </ScrollReveal>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-6">
           {machines.map((machine, i) => (
             <ScrollReveal key={machine.name} delay={i * 80} className="h-full">
               <article className="h-full flex flex-col bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-md hover:-translate-y-1 transition-all">
@@ -67,8 +67,8 @@ export function TechnologySection() {
                       src={machine.image}
                       alt={machine.name}
                       fill
-                      sizes="(min-width: 1024px) 20vw, (min-width: 640px) 50vw, 100vw"
-                      className="object-contain p-4"
+                      sizes="(min-width: 1024px) 20vw, 50vw"
+                      className="object-contain p-2 sm:p-4"
                       loading="lazy"
                     />
                   ) : (
@@ -82,11 +82,15 @@ export function TechnologySection() {
                 </div>
 
                 {/* Content */}
-                <div className="flex flex-col flex-1 p-6">
-                  <h3 className="font-display text-lg font-bold text-navy mb-3">
+                <div className="flex flex-col flex-1 p-4 sm:p-6">
+                  <h3 className="font-display text-sm sm:text-lg font-bold text-navy mb-2 sm:mb-3">
                     {machine.name}
                   </h3>
-                  <ReadMore text={machine.text} className="flex-1" />
+                  <ReadMore
+                    text={machine.text}
+                    className="flex-1"
+                    textClassName="text-[13px] sm:text-[15px]"
+                  />
                 </div>
               </article>
             </ScrollReveal>

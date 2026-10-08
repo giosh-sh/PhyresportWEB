@@ -47,7 +47,13 @@ export interface Category {
   name: string;
   slug: string;
   parent_id?: string | null;
+  /** Enlace directo (página interna o URL externa). Vacío = grupo de productos. */
   url?: string | null;
+  /** true = grupo/colección de productos de la tienda. */
+  is_collection?: boolean;
+  image?: string | null;
+  description?: string | null;
+  sort_order?: number;
   children?: Category[];
 }
 

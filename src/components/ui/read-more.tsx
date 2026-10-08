@@ -7,9 +7,10 @@ import { cn } from "@/lib/utils";
 interface ReadMoreProps {
   text: string;
   className?: string;
+  textClassName?: string;
 }
 
-export function ReadMore({ text, className }: ReadMoreProps) {
+export function ReadMore({ text, className, textClassName }: ReadMoreProps) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -17,7 +18,8 @@ export function ReadMore({ text, className }: ReadMoreProps) {
       <p
         className={cn(
           "text-[15px] text-gray-500 leading-relaxed",
-          !open && "line-clamp-3"
+          !open && "line-clamp-3",
+          textClassName
         )}
       >
         {text}

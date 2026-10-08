@@ -17,22 +17,32 @@ const STATIC_LINKS = [
   { href: "/contacto", label: "Contacto" },
 ];
 
-function slugToHref(slug: string): string {
-  if (slug === "inicio") return "/";
-  if (slug === "servicios") return "/servicios";
-  if (slug === "cursos") return "/cursos";
-  if (slug === "phyresport-products" || slug === "productos" || slug === "shop" || slug === "tienda") return "/tienda";
-  if (slug === "contacto") return "/contacto";
-  if (slug === "fisioterapia" || slug === "osteopatia" || slug === "osteopat-a" || slug === "terapia-manual") {
-    return `/servicios/${slug.replace("-a", "ia")}`;
-  }
-  return `/categoria/${slug}`;
-}
+// Slugs heredados del seed inicial → su página de marketing correspondiente.
+// Solo se usan como respaldo cuando la categoría no tiene `url` ni está marcada
+// como colección. Desde /admin/categories se puede sobreescribir rellenando `url`.
+const LEGACY_PAGE_URLS: Record<string, string> = {
+  inicio: "/",
+  servicios: "/servicios",
+  cursos: "/cursos",
+  contacto: "/contacto",
+  "phyresport-products": "/tienda",
+  productos: "/tienda",
+  tienda: "/tienda",
+  shop: "/tienda",
+};
 
+/**
+ * Resuelve el destino de una categoría del navbar:
+ *  1. `url` rellena  → enlace directo (página interna, ancla, https://, mailto:…).
+ *  2. `is_collection` → grupo/colección de productos de la tienda (/categoria/<slug>).
+ *  3. slug heredado  → página de marketing (solo seed antiguo).
+ *  4. por defecto    → grupo de productos de la tienda.
+ */
 function categoryHref(cat: Category): string {
   const url = cat.url?.trim();
   if (url) return url;
-  return slugToHref(cat.slug);
+  if (cat.is_collection) return `/categoria/${cat.slug}`;
+  return LEGACY_PAGE_URLS[cat.slug] ?? `/categoria/${cat.slug}`;
 }
 
 export function Header({
@@ -203,7 +213,7 @@ export function Header({
             return (
               <Link
                 key={href || cat!.id}
-                href={href || slugToHref(cat!.slug)}
+                href={href || categoryHref(cat!)}
                 onClick={() => setMobileOpen(false)}
                 className="font-display text-2xl font-bold text-white hover:text-teal transition-colors"
               >
