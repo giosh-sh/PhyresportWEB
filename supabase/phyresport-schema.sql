@@ -358,9 +358,10 @@ WHERE NOT EXISTS (SELECT 1 FROM settings WHERE key = 'notifications');
 -- SEED: categorías del navbar de Phyresport
 -- + categoría phyresport/products para la tienda
 -- ============================================
-INSERT INTO categories (name, slug, parent_id, description, is_collection) VALUES
-  ('Inicio', 'inicio', NULL, 'Página principal', false),
-  ('Servicios', 'servicios', NULL, 'Fisioterapia deportiva, osteopatía y rehabilitación', false),
-  ('Cursos', 'cursos', NULL, 'Formación especializada para fisioterapeutas', false),
-  ('Productos', 'phyresport-products', NULL, 'Tienda de productos para fisioterapia y rehabilitación', true)
+INSERT INTO categories (name, slug, parent_id, description, url, is_collection, sort_order) VALUES
+  ('Inicio', 'inicio', NULL, 'Página principal', '/', false, 0),
+  ('Servicios', 'servicios', NULL, 'Fisioterapia deportiva, osteopatía y rehabilitación', '/servicios', false, 1),
+  ('Cursos', 'cursos', NULL, 'Formación especializada para fisioterapeutas', '/cursos', false, 2),
+  ('Productos', 'phyresport-products', NULL, 'Tienda de productos para fisioterapia y rehabilitación', '/tienda', true, 3),
+  ('Contacto', 'contacto', NULL, 'Página de contacto', '/contacto', false, 4)
 ON CONFLICT (slug) DO NOTHING;

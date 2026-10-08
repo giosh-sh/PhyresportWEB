@@ -175,18 +175,23 @@ export const getCategories = cache(async (rootOnly?: boolean): Promise<Category[
       return q;
     };
 
-    // Intento con `url`; si la columna aún no existe, reintento sin ella.
-    let { data, error } = await query("id, name, slug, parent_id, url");
-    if (error) {
-      const retry = await query("id, name, slug, parent_id");
-      if (retry.error) {
-        const fallback = await supabase.from("categories").select("id, name, slug, parent_id").order("name");
-        data = fallback.data;
-      } else {
-        data = retry.data;
-      }
+    // Intento con todas las columnas; voy degradando si alguna aún no existe.
+    const attempts = [
+      "id, name, slug, parent_id, url, is_collection, image, description",
+      "id, name, slug, parent_id, url",
+      "id, name, slug, parent_id",
+    ];
+
+    for (const columns of attempts) {
+      const { data, error } = await query(columns);
+      if (!error) return (data ?? []) as Category[];
     }
-    return (data ?? []) as Category[];
+
+    const fallback = await supabase
+      .from("categories")
+      .select("id, name, slug, parent_id")
+      .order("name");
+    return (fallback.data ?? []) as Category[];
   } catch {
     return [];
   }

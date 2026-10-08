@@ -280,7 +280,7 @@ export default function ProductCatalog({ products, categories, activeCategorySlu
               {activeParent && isSubcategory && (
                 <li>
                   <Link
-                    href={`/${categories.find((c) => c.id === activeParent.parent_id)?.slug}`}
+                    href={`/categoria/${categories.find((c) => c.id === activeParent.parent_id)?.slug}`}
                     className="text-base text-gray-500 hover:text-black transition-colors"
                   >
                     ← {categories.find((c) => c.id === activeParent.parent_id)?.name}
@@ -299,7 +299,7 @@ export default function ProductCatalog({ products, categories, activeCategorySlu
                   {activeSubcategories.map((sub) => (
                     <li key={sub.id}>
                       <Link
-                        href={`/${sub.slug}`}
+                        href={`/categoria/${sub.slug}`}
                         className={`text-sm transition-colors ${
                           activeCategorySlug === sub.slug ? "text-black font-medium" : "text-gray-500 hover:text-black"
                         }`}
@@ -316,7 +316,7 @@ export default function ProductCatalog({ products, categories, activeCategorySlu
                   {activeGrandchildren.map((sub) => (
                     <li key={sub.id}>
                       <Link
-                        href={`/${sub.slug}`}
+                        href={`/categoria/${sub.slug}`}
                         className={`text-sm transition-colors ${
                           activeCategorySlug === sub.slug ? "text-black font-medium" : "text-gray-500 hover:text-black"
                         }`}
@@ -332,7 +332,7 @@ export default function ProductCatalog({ products, categories, activeCategorySlu
             rootCategories.map((cat) => (
               <li key={cat.id}>
                 <Link
-                  href={`/${cat.slug}`}
+                  href={`/categoria/${cat.slug}`}
                   className={`text-base transition-colors ${
                     activeCategorySlug === cat.slug ? "text-black font-medium" : "text-gray-500 hover:text-black"
                   }`}

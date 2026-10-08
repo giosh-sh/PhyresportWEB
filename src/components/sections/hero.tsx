@@ -63,13 +63,13 @@ export async function HeroSection() {
               Tu{" "}
               <span className="relative inline-block">
                 movimiento
-                <span className="absolute bottom-1 left-0 h-1.5 bg-gradient-to-r from-teal to-cyan rounded-sm animate-underline-sweep" />
+                <span className="absolute bottom-1 left-0 h-[2px] sm:h-1.5 bg-gradient-to-r from-teal to-cyan rounded-sm animate-underline-sweep" />
               </span>
               .<br />
               Nuestra{" "}
               <span className="relative inline-block">
                 misión
-                <span className="absolute bottom-1 left-0 h-1.5 bg-gradient-to-r from-teal to-cyan rounded-sm animate-underline-sweep" />
+                <span className="absolute bottom-1 left-0 h-[2px] sm:h-1.5 bg-gradient-to-r from-teal to-cyan rounded-sm animate-underline-sweep" />
               </span>
               .
             </h1>
