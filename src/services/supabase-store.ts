@@ -184,14 +184,14 @@ export const getCategories = cache(async (rootOnly?: boolean): Promise<Category[
 
     for (const columns of attempts) {
       const { data, error } = await query(columns);
-      if (!error) return (data ?? []) as Category[];
+      if (!error) return (data ?? []) as unknown as Category[];
     }
 
     const fallback = await supabase
       .from("categories")
       .select("id, name, slug, parent_id")
       .order("name");
-    return (fallback.data ?? []) as Category[];
+    return (fallback.data ?? []) as unknown as Category[];
   } catch {
     return [];
   }
