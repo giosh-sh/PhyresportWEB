@@ -278,6 +278,96 @@ export const products = [
   },
 ] as const;
 
+export interface Machine {
+  slug: string;
+  name: string;
+  image: string | null;
+  text: string;
+  highlights: string[];
+}
+
+export const machines: Machine[] = [
+  {
+    slug: "simai",
+    name: "SIMAI",
+    image: "/img/simai.jpeg",
+    text: "SIMAI es una tecnología avanzada basada en campos electromagnéticos de alta intensidad, capaz de actuar de forma profunda sobre el sistema neuromuscular. Permite trabajar el dolor, la activación y recuperación muscular y la función neuromotora, complementando nuestros tratamientos de fisioterapia avanzada.",
+    highlights: [
+      "Campos electromagnéticos de alta intensidad",
+      "Actúa de forma profunda sobre el sistema neuromuscular",
+      "Trabajo del dolor y la activación muscular",
+      "Mejora de la función neuromotora",
+    ],
+  },
+  {
+    slug: "k-laser-cube-plus-30",
+    name: "K-Laser Cube Plus 30",
+    image: "/img/k-laser-cube-plus-30.jpeg",
+    text: "K-Laser Cube Plus 30 es un sistema de láser terapéutico de alta potencia diseñado para actuar de forma profunda y precisa sobre los tejidos. Su aplicación se integra en el tratamiento del dolor, procesos inflamatorios, lesiones musculares y tendinosas y recuperación funcional, favoreciendo la respuesta biológica y la recuperación de los tejidos. Una tecnología avanzada, no invasiva y adaptable a las necesidades de cada paciente.",
+    highlights: [
+      "Láser terapéutico de alta potencia",
+      "Acción profunda y precisa sobre los tejidos",
+      "Tratamiento del dolor y procesos inflamatorios",
+      "Tecnología no invasiva y personalizable",
+    ],
+  },
+  {
+    slug: "impactis-m",
+    name: "Impactis M",
+    image: "/img/impactis-m.jpeg",
+    text: "Impactis M es un sistema de ondas de choque radiales utilizado en fisioterapia avanzada para el tratamiento de diferentes dolores y lesiones musculoesqueléticas, especialmente en tendones, músculos y tejidos blandos. Su aplicación mediante ondas mecánicas de alta energía permite estimular los tejidos, mejorar la respuesta local y favorecer los procesos de recuperación, integrándose en tratamientos personalizados según las necesidades de cada paciente.",
+    highlights: [
+      "Ondas de choque radiales de alta energía",
+      "Tratamiento de tendones, músculos y tejidos blandos",
+      "Estimulación de los tejidos y la respuesta local",
+      "Tratamientos personalizados",
+    ],
+  },
+  {
+    slug: "doctor-tecar-plus",
+    name: "Doctor Tecar Plus",
+    image: "/img/doctor-tecar-plus.jpeg",
+    text: "Doctor Tecar Plus es un sistema de diatermia capacitiva y resistiva que utiliza radiofrecuencia para generar un efecto térmico profundo y controlado en los tejidos. Se integra en el tratamiento del dolor, lesiones musculares y tendinosas y procesos de recuperación funcional, favoreciendo la circulación y la respuesta fisiológica de los tejidos. Una tecnología avanzada que permite personalizar la intensidad y profundidad del tratamiento según las necesidades de cada paciente.",
+    highlights: [
+      "Diatermia capacitiva y resistiva",
+      "Efecto térmico profundo y controlado",
+      "Favorece la circulación y la recuperación funcional",
+      "Intensidad y profundidad personalizables",
+    ],
+  },
+  {
+    slug: "descompresion-muscular",
+    name: "Descompresión Muscular",
+    image: "/img/muscle-descompresion.jpeg",
+    text: "El dispositivo de Descompresión Muscular para un tratamiento muscular preciso y profundo. Combina tracción y descompresión controlada del tejido para liberar tensiones, mejorar la circulación y favorecer la recuperación muscular.",
+    highlights: [
+      "Tracción y descompresión controlada del tejido",
+      "Liberación de tensiones musculares",
+      "Mejora de la circulación",
+      "Recuperación muscular precisa y profunda",
+    ],
+  },
+];
+
+export const gymPhotos = [
+  "/img/media-gym/image00001.jpeg",
+  "/img/media-gym/image00002.jpeg",
+  "/img/media-gym/image00003.jpeg",
+  "/img/media-gym/image00005.jpeg",
+  "/img/media-gym/image00007.jpeg",
+  "/img/media-gym/image00008.jpeg",
+  "/img/media-gym/image00009.jpeg",
+  "/img/media-gym/image00010.jpeg",
+  "/img/media-gym/image00011.jpeg",
+  "/img/media-gym/image00012.jpeg",
+  "/img/media-gym/image00013.jpeg",
+  "/img/media-gym/image00014.jpeg",
+  "/img/media-gym/image00015.jpeg",
+  "/img/media-gym/image00016.jpeg",
+];
+
+export const gymVideo = "/img/media-gym/video-gym-1.mp4";
+
 export const objectives = [
   {
     number: "01",

@@ -1,41 +1,8 @@
 import Image from "next/image";
+import Link from "next/link";
 import { ScrollReveal } from "@/components/ui/scroll-reveal";
-import { ReadMore } from "@/components/ui/read-more";
-import { Cpu } from "lucide-react";
-
-interface Machine {
-  name: string;
-  image: string | null;
-  text: string;
-}
-
-const machines: Machine[] = [
-  {
-    name: "SIMAI",
-    image: "/img/simai.jpeg",
-    text: "SIMAI es una tecnología avanzada basada en campos electromagnéticos de alta intensidad, capaz de actuar de forma profunda sobre el sistema neuromuscular. Permite trabajar el dolor, la activación y recuperación muscular y la función neuromotora, complementando nuestros tratamientos de fisioterapia avanzada.",
-  },
-  {
-    name: "K-Laser Cube Plus 30",
-    image: "/img/k-laser-cube-plus-30.jpeg",
-    text: "K-Laser Cube Plus 30 es un sistema de láser terapéutico de alta potencia diseñado para actuar de forma profunda y precisa sobre los tejidos. Su aplicación se integra en el tratamiento del dolor, procesos inflamatorios, lesiones musculares y tendinosas y recuperación funcional, favoreciendo la respuesta biológica y la recuperación de los tejidos. Una tecnología avanzada, no invasiva y adaptable a las necesidades de cada paciente.",
-  },
-  {
-    name: "Impactis M",
-    image: "/img/impactis-m.jpeg",
-    text: "Impactis M es un sistema de ondas de choque radiales utilizado en fisioterapia avanzada para el tratamiento de diferentes dolores y lesiones musculoesqueléticas, especialmente en tendones, músculos y tejidos blandos. Su aplicación mediante ondas mecánicas de alta energía permite estimular los tejidos, mejorar la respuesta local y favorecer los procesos de recuperación, integrándose en tratamientos personalizados según las necesidades de cada paciente.",
-  },
-  {
-    name: "Doctor Tecar Plus",
-    image: "/img/doctor-tecar-plus.jpeg",
-    text: "Doctor Tecar Plus es un sistema de diatermia capacitiva y resistiva que utiliza radiofrecuencia para generar un efecto térmico profundo y controlado en los tejidos. Se integra en el tratamiento del dolor, lesiones musculares y tendinosas y procesos de recuperación funcional, favoreciendo la circulación y la respuesta fisiológica de los tejidos. Una tecnología avanzada que permite personalizar la intensidad y profundidad del tratamiento según las necesidades de cada paciente.",
-  },
-  {
-    name: "Descompresión Muscular",
-    image: "/img/muscle-descompresion.jpeg",
-    text: "El dispositivo de Descompresión Muscular para un tratamiento muscular preciso y profundo. Combina tracción y descompresión controlada del tejido para liberar tensiones, mejorar la circulación y favorecer la recuperación muscular.",
-  },
-];
+import { machines } from "@/lib/data";
+import { ArrowRight, Cpu } from "lucide-react";
 
 export function TechnologySection() {
   return (
@@ -58,8 +25,11 @@ export function TechnologySection() {
 
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-6">
           {machines.map((machine, i) => (
-            <ScrollReveal key={machine.name} delay={i * 80} className="h-full">
-              <article className="h-full flex flex-col bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-md hover:-translate-y-1 transition-all">
+            <ScrollReveal key={machine.slug} delay={i * 80} className="h-full">
+              <Link
+                href={`/tecnologia/${machine.slug}`}
+                className="group h-full flex flex-col bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-md hover:-translate-y-1 transition-all"
+              >
                 {/* Image / placeholder */}
                 <div className="relative aspect-[4/3] bg-white flex items-center justify-center">
                   {machine.image ? (
@@ -68,7 +38,7 @@ export function TechnologySection() {
                       alt={machine.name}
                       fill
                       sizes="(min-width: 1024px) 20vw, 50vw"
-                      className="object-contain p-2 sm:p-4"
+                      className="object-contain p-2 sm:p-4 group-hover:scale-[1.03] transition-transform duration-500"
                       loading="lazy"
                     />
                   ) : (
@@ -86,13 +56,15 @@ export function TechnologySection() {
                   <h3 className="font-display text-sm sm:text-lg font-bold text-navy mb-2 sm:mb-3">
                     {machine.name}
                   </h3>
-                  <ReadMore
-                    text={machine.text}
-                    className="flex-1"
-                    textClassName="text-[13px] sm:text-[15px]"
-                  />
+                  <p className="text-[13px] sm:text-[15px] text-gray-500 leading-relaxed line-clamp-3 flex-1">
+                    {machine.text}
+                  </p>
+                  <span className="mt-2 sm:mt-3 inline-flex items-center gap-1.5 font-display text-[13px] sm:text-sm font-semibold text-teal group-hover:gap-2.5 transition-all">
+                    Leer más
+                    <ArrowRight className="w-4 h-4" aria-hidden />
+                  </span>
                 </div>
-              </article>
+              </Link>
             </ScrollReveal>
           ))}
         </div>

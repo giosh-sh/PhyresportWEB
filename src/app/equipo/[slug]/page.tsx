@@ -56,7 +56,7 @@ export default async function TeamMemberPage({ params }: Props) {
 
             <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,380px)_1fr] gap-10 lg:gap-16 items-start">
               {/* Portrait */}
-              <div className="relative aspect-[4/5] rounded-xl overflow-hidden bg-ice shadow-sm">
+              <div className="relative aspect-[4/5] w-full max-w-[300px] mx-auto lg:max-w-none lg:mx-0 rounded-xl overflow-hidden bg-ice shadow-sm">
                 <Image
                   src={member.image}
                   alt={member.fullName}

@@ -140,9 +140,9 @@ function ProductCardInner({ product, index }: { product: Product; index: number 
           disabled={favLoading}
           className={`absolute top-3 right-3 w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 ${
             fav
-              ? "bg-ember text-white shadow-md"
-              : "bg-white/70 text-[#8A8680] hover:bg-white hover:text-ember opacity-0 group-hover:opacity-100"
-          } ${fav ? "opacity-100" : ""}`}
+              ? "bg-ember text-white shadow-md opacity-100"
+              : "bg-white/70 text-[#8A8680] hover:bg-white hover:text-ember opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
+          }`}
           aria-label={fav ? "Quitar de favoritos" : "Añadir a favoritos"}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill={fav ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

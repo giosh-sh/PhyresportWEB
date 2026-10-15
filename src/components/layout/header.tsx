@@ -7,7 +7,6 @@ import { siteConfig } from "@/lib/data";
 import { Menu, X, ShoppingBag, Heart, ChevronDown, Shield, Package } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCartStore } from "@/store/cart";
-import { useFavoritesStore } from "@/store/favorites-store";
 import type { Category } from "@/types/product";
 
 const STATIC_LINKS = [
@@ -90,18 +89,21 @@ export function Header({
             : "bg-transparent py-4"
         )}
       >
-        <div className="w-full px-4 sm:px-6 lg:px-10 flex items-center justify-between">
+        <div className="w-full px-4 sm:px-6 lg:px-10 flex items-center gap-4 justify-between">
           {/* Logo */}
           <Link
             href="/"
             aria-label={`${siteConfig.name} — Inicio`}
-            className="font-display text-lg lg:text-xl font-extrabold tracking-[0.18em] uppercase text-white hover:text-teal transition-colors"
+            className="shrink-0 font-display text-lg lg:text-xl font-extrabold tracking-[0.18em] uppercase text-white hover:text-teal transition-colors"
           >
             Phyresport
           </Link>
 
           {/* Desktop Nav */}
-          <nav className="hidden md:flex items-center gap-8" aria-label="Navegación principal">
+          <nav
+            className="hidden xl:flex flex-1 min-w-0 items-center justify-center gap-6 2xl:gap-8 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            aria-label="Navegación principal"
+          >
             {navItems.map((item) => {
               const href = (item as { href?: string }).href;
               const label = (item as { label?: string }).label;
@@ -119,7 +121,7 @@ export function Header({
                 <Link
                   key={href || cat!.id}
                   href={href || categoryHref(cat!)}
-                  className="font-display text-sm font-medium text-white/75 hover:text-white transition-colors relative after:absolute after:bottom-[-4px] after:left-0 after:w-0 after:h-0.5 after:bg-teal after:transition-all hover:after:w-full"
+                  className="shrink-0 whitespace-nowrap font-display text-sm font-medium text-white/75 hover:text-white transition-colors relative after:absolute after:bottom-[-4px] after:left-0 after:w-0 after:h-0.5 after:bg-teal after:transition-all hover:after:w-full"
                 >
                   {label || cat!.name}
                 </Link>
@@ -128,7 +130,7 @@ export function Header({
           </nav>
 
           {/* CTA */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <Link
               href="/wishlist"
               className="hidden sm:flex items-center justify-center w-9 h-9 rounded-full border border-white/20 text-white/70 hover:text-white hover:border-teal hover:bg-white/5 transition-all"
@@ -140,12 +142,12 @@ export function Header({
 
             <Show when="signed-out">
               <SignInButton mode="modal">
-                <button className="hidden sm:flex items-center px-4 py-2.5 text-white font-display text-xs font-semibold rounded-full border border-white/25 hover:border-white/60 hover:bg-white/10 transition-all">
+                <button className="hidden xl:flex items-center px-4 py-2.5 text-white font-display text-xs font-semibold rounded-full border border-white/25 hover:border-white/60 hover:bg-white/10 transition-all">
                   Iniciar sesión
                 </button>
               </SignInButton>
               <SignUpButton mode="modal">
-                <button className="hidden sm:flex items-center gap-2 px-5 py-2.5 bg-teal text-white font-display text-xs font-semibold rounded-full hover:bg-teal/90 transition-all hover:-translate-y-0.5">
+                <button className="hidden xl:flex items-center gap-2 px-5 py-2.5 bg-teal text-white font-display text-xs font-semibold rounded-full hover:bg-teal/90 transition-all hover:-translate-y-0.5">
                   Crear cuenta
                 </button>
               </SignUpButton>
@@ -173,14 +175,14 @@ export function Header({
               href={siteConfig.whatsappHref}
               target="_blank"
               rel="noopener noreferrer"
-              className="hidden sm:flex items-center gap-2 px-5 py-2.5 bg-whatsapp text-white font-display text-xs font-semibold rounded-full hover:bg-whatsapp/90 transition-all hover:-translate-y-0.5"
+              className="hidden xl:flex items-center gap-2 px-5 py-2.5 bg-whatsapp text-white font-display text-xs font-semibold rounded-full hover:bg-whatsapp/90 transition-all hover:-translate-y-0.5"
             >
               <WhatsAppIcon className="w-4 h-4" />
               <span>Contactar</span>
             </a>
 
             <button
-              className="md:hidden p-2 text-white"
+              className="xl:hidden p-2 text-white"
               onClick={() => setMobileOpen(true)}
               aria-label="Abrir menú"
               aria-expanded={mobileOpen}
@@ -194,18 +196,19 @@ export function Header({
       {/* Mobile Nav Overlay */}
       {mobileOpen && (
         <div
-          className="fixed inset-0 z-[200] bg-navy/[0.97] backdrop-blur-xl flex flex-col items-center justify-center gap-6"
+          className="fixed inset-0 z-[200] bg-navy/[0.97] backdrop-blur-xl overflow-y-auto"
           role="dialog"
           aria-label="Menú de navegación"
         >
           <button
-            className="absolute top-5 right-6 p-2 text-white"
+            className="fixed top-5 right-6 z-10 p-2 text-white"
             onClick={() => setMobileOpen(false)}
             aria-label="Cerrar menú"
           >
             <X className="w-7 h-7" />
           </button>
 
+          <div className="min-h-full flex flex-col items-center justify-center gap-5 sm:gap-6 px-6 py-24">
           {navItems.map((item) => {
             const href = (item as { href?: string }).href;
             const label = (item as { label?: string }).label;
@@ -215,7 +218,7 @@ export function Header({
                 key={href || cat!.id}
                 href={href || categoryHref(cat!)}
                 onClick={() => setMobileOpen(false)}
-                className="font-display text-2xl font-bold text-white hover:text-teal transition-colors"
+                className="font-display text-xl sm:text-2xl font-bold text-white hover:text-teal transition-colors text-center"
               >
                 {label || cat!.name}
               </Link>
@@ -276,6 +279,7 @@ export function Header({
             <CartButton mobile />
             <AdminLink mobile />
           </div>
+          </div>
         </div>
       )}
     </>
@@ -308,7 +312,7 @@ function CartButton({ mobile }: { mobile?: boolean }) {
   return (
     <button
       onClick={toggleCart}
-      className="hidden sm:flex items-center justify-center w-9 h-9 rounded-full border border-white/20 text-white/70 hover:text-white hover:border-teal hover:bg-white/5 transition-all relative"
+      className="flex items-center justify-center w-9 h-9 rounded-full border border-white/20 text-white/70 hover:text-white hover:border-teal hover:bg-white/5 transition-all relative"
       aria-label="Carrito"
     >
       <ShoppingBag className="w-4 h-4" />
@@ -344,7 +348,7 @@ function AdminLink({ mobile }: { mobile?: boolean }) {
   return (
     <Link
       href="/admin"
-      className="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-full border border-teal/40 text-teal hover:bg-teal/10 hover:border-teal transition-all font-display text-xs font-semibold"
+      className="hidden xl:flex items-center gap-1.5 px-3 py-2 rounded-full border border-teal/40 text-teal hover:bg-teal/10 hover:border-teal transition-all font-display text-xs font-semibold"
     >
       <Shield className="w-3.5 h-3.5" />
       Admin
@@ -376,7 +380,7 @@ function CategoryDropdown({ category }: { category: Category }) {
       <Link
         href={categoryHref(category)}
         aria-expanded={open}
-        className="inline-flex items-center gap-1 font-display text-sm font-medium text-white/75 hover:text-white transition-colors relative after:absolute after:bottom-[-4px] after:left-0 after:w-0 after:h-0.5 after:bg-teal after:transition-all hover:after:w-full"
+        className="shrink-0 whitespace-nowrap inline-flex items-center gap-1 font-display text-sm font-medium text-white/75 hover:text-white transition-colors relative after:absolute after:bottom-[-4px] after:left-0 after:w-0 after:h-0.5 after:bg-teal after:transition-all hover:after:w-full"
       >
         {category.name}
         <ChevronDown
