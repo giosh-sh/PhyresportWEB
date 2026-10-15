@@ -41,6 +41,8 @@ export default function BannersPage() {
   const [formGradientColor, setFormGradientColor] = useState('#0B1D3A')
   const [formGradientColor2, setFormGradientColor2] = useState('#0891B2')
   const [formGradientOpacity, setFormGradientOpacity] = useState(65)
+  const [formGradientStart, setFormGradientStart] = useState(0)
+  const [formGradientEnd, setFormGradientEnd] = useState(100)
   const [formActive, setFormActive] = useState(true)
   const [saving, setSaving] = useState(false)
   const [mediaPicker, setMediaPicker] = useState(false)
@@ -75,6 +77,8 @@ export default function BannersPage() {
     setFormGradientColor(b.gradient_color ?? '#0B1D3A')
     setFormGradientColor2(b.gradient_color_2 ?? '#0891B2')
     setFormGradientOpacity(b.gradient_opacity ?? 65)
+    setFormGradientStart(b.gradient_start ?? 0)
+    setFormGradientEnd(b.gradient_end ?? 100)
     setFormActive(b.active)
   }
 
@@ -96,6 +100,8 @@ export default function BannersPage() {
     setFormGradientColor('#0B1D3A')
     setFormGradientColor2('#0891B2')
     setFormGradientOpacity(65)
+    setFormGradientStart(0)
+    setFormGradientEnd(100)
     setFormActive(true)
     setShowAdd(true)
   }
@@ -119,6 +125,8 @@ export default function BannersPage() {
     fd.append('gradient_color', formGradientColor)
     fd.append('gradient_color_2', formGradientColor2)
     fd.append('gradient_opacity', String(formGradientOpacity))
+    fd.append('gradient_start', String(formGradientStart))
+    fd.append('gradient_end', String(formGradientEnd))
     if (formImage) fd.append('image', formImage)
     else fd.append('image_url', formImagePreview)
 
@@ -396,9 +404,37 @@ export default function BannersPage() {
                   className="w-full"
                 />
               </div>
+              <div className="mt-3 grid grid-cols-2 gap-3">
+                <div>
+                  <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
+                    <span>Posición color inicial</span><span>{formGradientStart}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={formGradientStart}
+                    onChange={(e) => setFormGradientStart(Number(e.target.value))}
+                    className="w-full"
+                  />
+                </div>
+                <div>
+                  <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
+                    <span>Posición color final</span><span>{formGradientEnd}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={formGradientEnd}
+                    onChange={(e) => setFormGradientEnd(Number(e.target.value))}
+                    className="w-full"
+                  />
+                </div>
+              </div>
               <div
                 className="mt-3 h-8 rounded border border-border"
-                style={{ background: `linear-gradient(135deg, ${formGradientColor}, ${formGradientColor2})` }}
+                style={{ background: `linear-gradient(135deg, ${formGradientColor} ${formGradientStart}%, ${formGradientColor2} ${formGradientEnd}%)` }}
                 title="Vista previa del degradado"
               />
             </div>

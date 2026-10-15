@@ -21,6 +21,8 @@ interface HeroBanner {
   gradientColor: string;
   gradientColor2: string;
   gradientOpacity: number;
+  gradientStart: number;
+  gradientEnd: number;
 }
 
 async function getHeroBanner(): Promise<HeroBanner> {
@@ -29,12 +31,14 @@ async function getHeroBanner(): Promise<HeroBanner> {
     gradientColor: DEFAULT_GRADIENT_COLOR,
     gradientColor2: DEFAULT_GRADIENT_COLOR_2,
     gradientOpacity: DEFAULT_GRADIENT_OPACITY,
+    gradientStart: 0,
+    gradientEnd: 100,
   };
   try {
     const supabase = createPublicClient();
     const { data } = await supabase
       .from("banners")
-      .select("image_url, gradient_color, gradient_color_2, gradient_opacity")
+      .select("image_url, gradient_color, gradient_color_2, gradient_opacity, gradient_start, gradient_end")
       .eq("active", true)
       .order("sort_order", { ascending: true })
       .limit(1);
@@ -47,6 +51,8 @@ async function getHeroBanner(): Promise<HeroBanner> {
       gradientColor: (banner.gradient_color as string) || DEFAULT_GRADIENT_COLOR,
       gradientColor2: (banner.gradient_color_2 as string) || DEFAULT_GRADIENT_COLOR_2,
       gradientOpacity: opacity,
+      gradientStart: typeof banner.gradient_start === "number" ? banner.gradient_start : 0,
+      gradientEnd: typeof banner.gradient_end === "number" ? banner.gradient_end : 100,
     };
   } catch {
     return fallback;
@@ -54,13 +60,14 @@ async function getHeroBanner(): Promise<HeroBanner> {
 }
 
 export async function HeroSection() {
-  const { bg, gradientColor, gradientColor2, gradientOpacity } = await getHeroBanner();
+  const { bg, gradientColor, gradientColor2, gradientOpacity, gradientStart, gradientEnd } =
+    await getHeroBanner();
 
   const overlayStyle: React.CSSProperties = {
-    background: `linear-gradient(135deg, ${hexToRgba(gradientColor, gradientOpacity)} 0%, ${hexToRgba(
+    background: `linear-gradient(135deg, ${hexToRgba(gradientColor, gradientOpacity)} ${gradientStart}%, ${hexToRgba(
       gradientColor2,
       gradientOpacity
-    )} 100%)`,
+    )} ${gradientEnd}%)`,
   };
 
   return (

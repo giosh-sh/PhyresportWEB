@@ -243,6 +243,8 @@ export interface Banner {
   gradient_color: string | null;
   gradient_color_2: string | null;
   gradient_opacity: number | null;
+  gradient_start: number | null;
+  gradient_end: number | null;
   video_url: string | null;
   video_start: number | null;
   video_end: number | null;
