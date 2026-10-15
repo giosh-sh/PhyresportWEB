@@ -13,11 +13,13 @@ const stats = [
 ];
 
 const DEFAULT_GRADIENT_COLOR = "#0B1D3A";
+const DEFAULT_GRADIENT_COLOR_2 = "#0891B2";
 const DEFAULT_GRADIENT_OPACITY = 65;
 
 interface HeroBanner {
   bg: string | null;
   gradientColor: string;
+  gradientColor2: string;
   gradientOpacity: number;
 }
 
@@ -25,13 +27,14 @@ async function getHeroBanner(): Promise<HeroBanner> {
   const fallback: HeroBanner = {
     bg: null,
     gradientColor: DEFAULT_GRADIENT_COLOR,
+    gradientColor2: DEFAULT_GRADIENT_COLOR_2,
     gradientOpacity: DEFAULT_GRADIENT_OPACITY,
   };
   try {
     const supabase = createPublicClient();
     const { data } = await supabase
       .from("banners")
-      .select("image_url, gradient_color, gradient_opacity")
+      .select("image_url, gradient_color, gradient_color_2, gradient_opacity")
       .eq("active", true)
       .order("sort_order", { ascending: true })
       .limit(1);
@@ -42,6 +45,7 @@ async function getHeroBanner(): Promise<HeroBanner> {
     return {
       bg: (banner.image_url as string) || null,
       gradientColor: (banner.gradient_color as string) || DEFAULT_GRADIENT_COLOR,
+      gradientColor2: (banner.gradient_color_2 as string) || DEFAULT_GRADIENT_COLOR_2,
       gradientOpacity: opacity,
     };
   } catch {
@@ -50,13 +54,13 @@ async function getHeroBanner(): Promise<HeroBanner> {
 }
 
 export async function HeroSection() {
-  const { bg, gradientColor, gradientOpacity } = await getHeroBanner();
+  const { bg, gradientColor, gradientColor2, gradientOpacity } = await getHeroBanner();
 
   const overlayStyle: React.CSSProperties = {
     background: `linear-gradient(135deg, ${hexToRgba(gradientColor, gradientOpacity)} 0%, ${hexToRgba(
-      gradientColor,
+      gradientColor2,
       gradientOpacity
-    )} 45%, ${hexToRgba(gradientColor, Math.max(0, gradientOpacity - 30))} 100%)`,
+    )} 100%)`,
   };
 
   return (

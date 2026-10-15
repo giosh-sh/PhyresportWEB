@@ -15,6 +15,11 @@ function clampOpacity(value: number): number {
   return Math.min(100, Math.max(0, value))
 }
 
+function normalizeHex(value: unknown, fallback: string): string {
+  const raw = typeof value === 'string' ? value.trim() : ''
+  return /^#[0-9a-fA-F]{6}$/.test(raw) ? raw : fallback
+}
+
 export async function getBanners(): Promise<Banner[]> {
   try { await checkAdmin() } catch { return [] }
   const supabase = createAdminClient()
@@ -25,7 +30,8 @@ export async function getBanners(): Promise<Banner[]> {
     banners.forEach((b: any) => { b.text_x = 50; b.text_y = 50 })
   }
   banners.forEach((b: any) => {
-    if (b.gradient_color === undefined || b.gradient_color === null) b.gradient_color = '#0B1D3A'
+    if (!b.gradient_color) b.gradient_color = '#0B1D3A'
+    if (!b.gradient_color_2) b.gradient_color_2 = '#0891B2'
     if (b.gradient_opacity === undefined || b.gradient_opacity === null) b.gradient_opacity = 65
   })
   return banners as Banner[]
@@ -66,8 +72,8 @@ export async function createBanner(formData: FormData) {
     const videoStart = formData.get('video_start') ? parseInt(formData.get('video_start') as string) || 0 : null
     const videoEnd = formData.get('video_end') ? parseInt(formData.get('video_end') as string) || null : null
 
-    const gradientColorRaw = (formData.get('gradient_color') as string) || '#0B1D3A'
-    const gradientColor = /^#[0-9a-fA-F]{6}$/.test(gradientColorRaw) ? gradientColorRaw : '#0B1D3A'
+    const gradientColor = normalizeHex(formData.get('gradient_color'), '#0B1D3A')
+    const gradientColor2 = normalizeHex(formData.get('gradient_color_2'), '#0891B2')
     const gradientOpacity = clampOpacity(parseInt(formData.get('gradient_opacity') as string))
 
     const { error } = await supabase.from('banners').insert({
@@ -82,6 +88,7 @@ export async function createBanner(formData: FormData) {
       text_x,
       text_y,
       gradient_color: gradientColor,
+      gradient_color_2: gradientColor2,
       gradient_opacity: gradientOpacity,
       video_url: videoUrl,
       video_start: videoStart,
@@ -130,8 +137,8 @@ export async function updateBanner(id: string, formData: FormData) {
     const videoStart = formData.get('video_start') ? parseInt(formData.get('video_start') as string) || 0 : null
     const videoEnd = formData.get('video_end') ? parseInt(formData.get('video_end') as string) || null : null
 
-    const gradientColorRaw = (formData.get('gradient_color') as string) || '#0B1D3A'
-    const gradientColor = /^#[0-9a-fA-F]{6}$/.test(gradientColorRaw) ? gradientColorRaw : '#0B1D3A'
+    const gradientColor = normalizeHex(formData.get('gradient_color'), '#0B1D3A')
+    const gradientColor2 = normalizeHex(formData.get('gradient_color_2'), '#0891B2')
     const gradientOpacity = clampOpacity(parseInt(formData.get('gradient_opacity') as string))
 
     const update: Record<string, any> = {
@@ -144,6 +151,7 @@ export async function updateBanner(id: string, formData: FormData) {
       text_x,
       text_y,
       gradient_color: gradientColor,
+      gradient_color_2: gradientColor2,
       gradient_opacity: gradientOpacity,
       video_start: videoStart,
       video_end: videoEnd,

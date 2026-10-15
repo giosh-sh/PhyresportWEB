@@ -241,6 +241,7 @@ export interface Banner {
   title_color: string | null;
   subtitle_color: string | null;
   gradient_color: string | null;
+  gradient_color_2: string | null;
   gradient_opacity: number | null;
   video_url: string | null;
   video_start: number | null;

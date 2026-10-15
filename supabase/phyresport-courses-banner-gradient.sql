@@ -5,6 +5,7 @@
 
 -- 1. BANNER: color y opacidad del degradado del hero
 ALTER TABLE banners ADD COLUMN IF NOT EXISTS gradient_color TEXT DEFAULT '#0B1D3A';
+ALTER TABLE banners ADD COLUMN IF NOT EXISTS gradient_color_2 TEXT DEFAULT '#0891B2';
 ALTER TABLE banners ADD COLUMN IF NOT EXISTS gradient_opacity INTEGER DEFAULT 65;
 
 -- 2. CURSOS
