@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS course_registrations (
   message TEXT NOT NULL DEFAULT '',
   user_id TEXT,
   status TEXT NOT NULL DEFAULT 'pending'
-    CHECK (status IN ('pending', 'contacted', 'confirmed', 'cancelled')),
+    CHECK (status IN ('pending', 'contacted', 'confirmed', 'paid', 'cancelled')),
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
@@ -78,3 +78,9 @@ VALUES
     1
   )
 ON CONFLICT (slug) DO NOTHING;
+
+-- 6. AMPLIAR ESTADOS DE INSCRIPCIÓN (para bases de datos ya creadas)
+-- Añade el estado 'paid' (Pagado) al CHECK existente.
+ALTER TABLE course_registrations DROP CONSTRAINT IF EXISTS course_registrations_status_check;
+ALTER TABLE course_registrations ADD CONSTRAINT course_registrations_status_check
+  CHECK (status IN ('pending', 'contacted', 'confirmed', 'paid', 'cancelled'));

@@ -16,7 +16,7 @@ import {
   reorderCourses, getCourseRegistrations, updateRegistrationStatus, deleteRegistration,
 } from '@/lib/admin/courses'
 import {
-  REGISTRATION_STATUS_LABELS, REGISTRATION_STATUS_OPTIONS,
+  REGISTRATION_STATUS_LABELS, REGISTRATION_STATUS_OPTIONS, REGISTRATION_STATUS_COLORS,
   type AdminCourse, type CourseRegistration, type RegistrationStatus,
 } from '@/lib/admin/types'
 import { toast } from 'sonner'
@@ -315,7 +315,7 @@ export default function CursosAdminPage() {
                         <select
                           value={r.status}
                           onChange={(e) => handleStatus(r.id, e.target.value as RegistrationStatus)}
-                          className="h-9 rounded-md border border-input bg-background px-2 text-sm"
+                          className={`h-9 rounded-md border bg-background px-2 text-sm font-medium ${REGISTRATION_STATUS_COLORS[r.status]}`}
                         >
                           {REGISTRATION_STATUS_OPTIONS.map((o) => (
                             <option key={o.value} value={o.value}>{o.label}</option>

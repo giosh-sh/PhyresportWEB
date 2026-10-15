@@ -15,7 +15,7 @@ export function HeroTeam() {
 
   return (
     <div className="mt-6 flex items-center gap-3 bg-white/[0.08] border border-white/12 rounded-full py-2.5 pl-5 pr-5 backdrop-blur-md">
-      <div className="flex pt-4 -mb-4">
+      <div className="flex">
         {team.map((member, i) => (
           <motion.div
             key={member.slug}

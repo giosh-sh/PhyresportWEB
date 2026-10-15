@@ -249,12 +249,13 @@ export interface Banner {
   updated_at: string;
 }
 
-export type RegistrationStatus = "pending" | "contacted" | "confirmed" | "cancelled";
+export type RegistrationStatus = "pending" | "contacted" | "confirmed" | "paid" | "cancelled";
 
 export const REGISTRATION_STATUS_LABELS: Record<RegistrationStatus, string> = {
   pending: "Pendiente",
   contacted: "Contactado",
   confirmed: "Confirmado",
+  paid: "Pagado",
   cancelled: "Cancelado",
 };
 
@@ -262,8 +263,18 @@ export const REGISTRATION_STATUS_OPTIONS: { value: RegistrationStatus; label: st
   { value: "pending", label: "Pendiente" },
   { value: "contacted", label: "Contactado" },
   { value: "confirmed", label: "Confirmado" },
+  { value: "paid", label: "Pagado" },
   { value: "cancelled", label: "Cancelado" },
 ];
+
+// Clases de color (badge) por estado de inscripción.
+export const REGISTRATION_STATUS_COLORS: Record<RegistrationStatus, string> = {
+  pending: "bg-amber-500/15 text-amber-600 border-amber-500/30 dark:text-amber-400",
+  contacted: "bg-blue-500/15 text-blue-600 border-blue-500/30 dark:text-blue-400",
+  confirmed: "bg-emerald-500/15 text-emerald-600 border-emerald-500/30 dark:text-emerald-400",
+  paid: "bg-teal-500/15 text-teal-600 border-teal-500/30 dark:text-teal-400",
+  cancelled: "bg-red-500/15 text-red-600 border-red-500/30 dark:text-red-400",
+};
 
 export interface AdminCourse {
   id: string;

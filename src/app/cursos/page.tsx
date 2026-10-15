@@ -40,62 +40,68 @@ export default async function CursosPage() {
 
         {/* Courses */}
         <section className="py-16 lg:py-20">
-          <div className="mx-auto max-w-4xl px-6 space-y-10">
-            {courses.length === 0 && (
+          <div className="mx-auto max-w-5xl px-6">
+            {courses.length === 0 ? (
               <p className="text-center text-gray-500">
                 No hay cursos disponibles en este momento.
               </p>
-            )}
-
-            {courses.map((course, i) => (
-              <ScrollReveal key={course.slug} delay={i * 100}>
-                <div className="bg-white rounded-2xl overflow-hidden shadow-md border border-gray-100">
-                  <Link href={`/cursos/${course.slug}`} className="group block">
-                    <Image
-                      src={course.image_full_url || course.image_url}
-                      alt={`${course.title} — ${course.date}`}
-                      width={800}
-                      height={400}
-                      className="w-full h-auto object-cover group-hover:opacity-95 transition-opacity"
-                      loading="lazy"
-                    />
-                  </Link>
-                  <div className="p-8">
-                    <p className="font-stats text-xs font-medium text-teal uppercase tracking-wider mb-2">
-                      {course.date}
-                    </p>
-                    <h2 className="font-display text-2xl font-bold text-navy mb-3">
-                      <Link href={`/cursos/${course.slug}`} className="hover:text-teal transition-colors">
-                        {course.title}
+            ) : (
+              <div className="grid gap-6 sm:grid-cols-2">
+                {courses.map((course, i) => (
+                  <ScrollReveal key={course.slug} delay={i * 100} className="h-full">
+                    <div className="group h-full flex flex-col bg-white rounded-2xl overflow-hidden shadow-md border border-gray-100 hover:shadow-xl hover:-translate-y-1 transition-all">
+                      <Link href={`/cursos/${course.slug}`} className="block">
+                        <div className="relative aspect-[16/10] overflow-hidden bg-ice">
+                          <Image
+                            src={course.image_url || course.image_full_url}
+                            alt={`${course.title} — ${course.date}`}
+                            fill
+                            sizes="(min-width: 640px) 50vw, 100vw"
+                            className="object-cover transition-transform duration-500 group-hover:scale-105"
+                            loading="lazy"
+                          />
+                        </div>
                       </Link>
-                    </h2>
-                    <p className="text-gray-500 leading-relaxed mb-6">{course.description}</p>
-                    <div className="flex flex-wrap gap-4">
-                      <a
-                        href={course.program_pdf}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 px-5 py-2.5 bg-ice text-navy font-display font-semibold text-sm rounded-full hover:bg-teal hover:text-white transition-all"
-                      >
-                        <FileText className="w-4 h-4" />
-                        Descargar programa
-                      </a>
-                      <Link
-                        href={`/cursos/${course.slug}#inscripcion`}
-                        className="inline-flex items-center gap-2 px-5 py-2.5 bg-teal text-white font-display font-semibold text-sm rounded-full hover:bg-cyan transition-all"
-                      >
-                        Inscribirse
-                        <ArrowRight className="w-4 h-4" />
-                      </Link>
+                      <div className="flex flex-col flex-1 p-6">
+                        <p className="font-stats text-xs font-medium text-teal uppercase tracking-wider mb-2">
+                          {course.date}
+                        </p>
+                        <h2 className="font-display text-xl font-bold text-navy mb-2 leading-tight">
+                          <Link href={`/cursos/${course.slug}`} className="hover:text-teal transition-colors">
+                            {course.title}
+                          </Link>
+                        </h2>
+                        <p className="text-[15px] text-gray-500 leading-relaxed mb-5 flex-1 line-clamp-3">
+                          {course.description}
+                        </p>
+                        <div className="flex flex-wrap gap-3">
+                          <a
+                            href={course.program_pdf}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 px-4 py-2 bg-ice text-navy font-display font-semibold text-xs rounded-full hover:bg-teal hover:text-white transition-all"
+                          >
+                            <FileText className="w-3.5 h-3.5" />
+                            Programa
+                          </a>
+                          <Link
+                            href={`/cursos/${course.slug}#inscripcion`}
+                            className="inline-flex items-center gap-2 px-4 py-2 bg-teal text-white font-display font-semibold text-xs rounded-full hover:bg-cyan transition-all"
+                          >
+                            Inscribirse
+                            <ArrowRight className="w-3.5 h-3.5" />
+                          </Link>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-              </ScrollReveal>
-            ))}
+                  </ScrollReveal>
+                ))}
+              </div>
+            )}
 
             {/* BonificaTuCurso */}
             <ScrollReveal delay={200}>
-              <div className="text-center pt-8">
+              <div className="text-center pt-14">
                 <a
                   href={siteConfig.bonificaTuCurso}
                   target="_blank"
