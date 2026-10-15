@@ -116,7 +116,7 @@ export default function BannersPage() {
     fd.append('gradient_color', formGradientColor)
     fd.append('gradient_opacity', String(formGradientOpacity))
     if (formImage) fd.append('image', formImage)
-    else if (formImagePreview) fd.append('image_url', formImagePreview)
+    else fd.append('image_url', formImagePreview)
 
     try {
       const res = editItem
@@ -282,6 +282,17 @@ export default function BannersPage() {
                   <Button type="button" variant="outline" size="sm" className="h-8 text-xs" onClick={() => setMediaPicker(true)}>
                     <Image size={11} className="mr-1.5" /> Explorar medios
                   </Button>
+                  {(formImagePreview || formImage) && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 text-xs text-destructive hover:text-destructive"
+                      onClick={() => { setFormImage(null); setFormImagePreview('') }}
+                    >
+                      <Trash2 size={11} className="mr-1.5" /> Quitar imagen
+                    </Button>
+                  )}
                 </div>
               </div>
               {formImageError && <p className="text-xs text-admin-danger mt-1">{formImageError}</p>}

@@ -149,6 +149,7 @@ export async function updateBanner(id: string, formData: FormData) {
       video_end: videoEnd,
     }
     if (imageUrl) update.image_url = imageUrl
+    else if (formData.has('image_url')) update.image_url = ''
     if (videoUrl !== undefined) update.video_url = videoUrl
 
     const { error } = await supabase.from('banners').update(update).eq('id', id)

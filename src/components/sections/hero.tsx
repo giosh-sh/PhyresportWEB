@@ -12,19 +12,18 @@ const stats = [
   { number: "7", label: "Especialistas" },
 ];
 
-const DEFAULT_BG = "https://www.phyresport.com/images/sampledata/asimage/home/home.jpg";
 const DEFAULT_GRADIENT_COLOR = "#0B1D3A";
 const DEFAULT_GRADIENT_OPACITY = 65;
 
 interface HeroBanner {
-  bg: string;
+  bg: string | null;
   gradientColor: string;
   gradientOpacity: number;
 }
 
 async function getHeroBanner(): Promise<HeroBanner> {
   const fallback: HeroBanner = {
-    bg: DEFAULT_BG,
+    bg: null,
     gradientColor: DEFAULT_GRADIENT_COLOR,
     gradientOpacity: DEFAULT_GRADIENT_OPACITY,
   };
@@ -34,7 +33,6 @@ async function getHeroBanner(): Promise<HeroBanner> {
       .from("banners")
       .select("image_url, gradient_color, gradient_opacity")
       .eq("active", true)
-      .not("image_url", "is", null)
       .order("sort_order", { ascending: true })
       .limit(1);
     const banner = data?.[0];
@@ -42,7 +40,7 @@ async function getHeroBanner(): Promise<HeroBanner> {
     const opacity =
       typeof banner.gradient_opacity === "number" ? banner.gradient_opacity : DEFAULT_GRADIENT_OPACITY;
     return {
-      bg: (banner.image_url as string) || DEFAULT_BG,
+      bg: (banner.image_url as string) || null,
       gradientColor: (banner.gradient_color as string) || DEFAULT_GRADIENT_COLOR,
       gradientOpacity: opacity,
     };
@@ -63,15 +61,17 @@ export async function HeroSection() {
 
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden bg-navy" id="inicio">
-      {/* Background */}
+      {/* Background: imagen del banner si existe + degradado configurable */}
       <div className="absolute inset-0">
-        <Image
-          src={bg}
-          alt=""
-          fill
-          className="object-cover opacity-25 saturate-[0.35]"
-          priority
-        />
+        {bg && (
+          <Image
+            src={bg}
+            alt=""
+            fill
+            className="object-cover opacity-25 saturate-[0.35]"
+            priority
+          />
+        )}
         <div className="absolute inset-0" style={overlayStyle} />
       </div>
 
