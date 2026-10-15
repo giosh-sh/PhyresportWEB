@@ -7,6 +7,7 @@ import HeaderWrapper from "@/components/layout/header-wrapper";
 import { Footer } from "@/components/layout/footer";
 import { WhatsAppFloat } from "@/components/ui/whatsapp-float";
 import { ScrollReveal } from "@/components/ui/scroll-reveal";
+import { GymVideo } from "@/components/sections/gym-video";
 
 export const metadata: Metadata = {
   title: "Gym y Readaptación",
@@ -136,18 +137,7 @@ export default function GymPage() {
               </div>
             </ScrollReveal>
             <ScrollReveal delay={100}>
-              <div className="relative overflow-hidden rounded-2xl bg-navy shadow-[0_24px_80px_rgba(0,0,0,0.25)]">
-                <video
-                  className="w-full h-auto aspect-video"
-                  controls
-                  playsInline
-                  preload="metadata"
-                  poster={gymPhotos[1] ?? gymPhotos[0]}
-                >
-                  <source src={gymVideo} type="video/mp4" />
-                  Tu navegador no soporta la reproducción de vídeo.
-                </video>
-              </div>
+              <GymVideo src={gymVideo} poster={gymPhotos[1] ?? gymPhotos[0]} />
             </ScrollReveal>
           </div>
         </section>
