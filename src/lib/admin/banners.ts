@@ -10,6 +10,11 @@ async function checkAdmin() {
   await requireAdmin()
 }
 
+function clampOpacity(value: number): number {
+  if (Number.isNaN(value)) return 65
+  return Math.min(100, Math.max(0, value))
+}
+
 export async function getBanners(): Promise<Banner[]> {
   try { await checkAdmin() } catch { return [] }
   const supabase = createAdminClient()
@@ -19,6 +24,10 @@ export async function getBanners(): Promise<Banner[]> {
   if (banners.length > 0 && banners[0].text_x === undefined) {
     banners.forEach((b: any) => { b.text_x = 50; b.text_y = 50 })
   }
+  banners.forEach((b: any) => {
+    if (b.gradient_color === undefined || b.gradient_color === null) b.gradient_color = '#0B1D3A'
+    if (b.gradient_opacity === undefined || b.gradient_opacity === null) b.gradient_opacity = 65
+  })
   return banners as Banner[]
 }
 
@@ -57,6 +66,10 @@ export async function createBanner(formData: FormData) {
     const videoStart = formData.get('video_start') ? parseInt(formData.get('video_start') as string) || 0 : null
     const videoEnd = formData.get('video_end') ? parseInt(formData.get('video_end') as string) || null : null
 
+    const gradientColorRaw = (formData.get('gradient_color') as string) || '#0B1D3A'
+    const gradientColor = /^#[0-9a-fA-F]{6}$/.test(gradientColorRaw) ? gradientColorRaw : '#0B1D3A'
+    const gradientOpacity = clampOpacity(parseInt(formData.get('gradient_opacity') as string))
+
     const { error } = await supabase.from('banners').insert({
       title,
       subtitle: (formData.get('subtitle') as string) || null,
@@ -68,6 +81,8 @@ export async function createBanner(formData: FormData) {
       sort_order: (count ?? 0) + 1,
       text_x,
       text_y,
+      gradient_color: gradientColor,
+      gradient_opacity: gradientOpacity,
       video_url: videoUrl,
       video_start: videoStart,
       video_end: videoEnd,
@@ -115,6 +130,10 @@ export async function updateBanner(id: string, formData: FormData) {
     const videoStart = formData.get('video_start') ? parseInt(formData.get('video_start') as string) || 0 : null
     const videoEnd = formData.get('video_end') ? parseInt(formData.get('video_end') as string) || null : null
 
+    const gradientColorRaw = (formData.get('gradient_color') as string) || '#0B1D3A'
+    const gradientColor = /^#[0-9a-fA-F]{6}$/.test(gradientColorRaw) ? gradientColorRaw : '#0B1D3A'
+    const gradientOpacity = clampOpacity(parseInt(formData.get('gradient_opacity') as string))
+
     const update: Record<string, any> = {
       title,
       subtitle: (formData.get('subtitle') as string) || null,
@@ -124,6 +143,8 @@ export async function updateBanner(id: string, formData: FormData) {
       active: formData.get('active') !== 'false',
       text_x,
       text_y,
+      gradient_color: gradientColor,
+      gradient_opacity: gradientOpacity,
       video_start: videoStart,
       video_end: videoEnd,
     }

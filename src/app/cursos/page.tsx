@@ -1,7 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
-import { courses, siteConfig } from "@/lib/data";
+import { siteConfig } from "@/lib/data";
+import { getPublicCourses } from "@/lib/courses";
 import HeaderWrapper from "@/components/layout/header-wrapper";
 import { Footer } from "@/components/layout/footer";
 import { WhatsAppFloat } from "@/components/ui/whatsapp-float";
@@ -14,7 +15,9 @@ export const metadata: Metadata = {
     "Formación especializada en EPI y técnicas avanzadas de fisioterapia para profesionales. Cursos bonificables.",
 };
 
-export default function CursosPage() {
+export default async function CursosPage() {
+  const courses = await getPublicCourses();
+
   return (
     <>
       <HeaderWrapper />
@@ -38,28 +41,38 @@ export default function CursosPage() {
         {/* Courses */}
         <section className="py-16 lg:py-20">
           <div className="mx-auto max-w-4xl px-6 space-y-10">
+            {courses.length === 0 && (
+              <p className="text-center text-gray-500">
+                No hay cursos disponibles en este momento.
+              </p>
+            )}
+
             {courses.map((course, i) => (
               <ScrollReveal key={course.slug} delay={i * 100}>
                 <div className="bg-white rounded-2xl overflow-hidden shadow-md border border-gray-100">
-                  <Image
-                    src={course.imageFull}
-                    alt={`${course.title} — ${course.date}`}
-                    width={800}
-                    height={400}
-                    className="w-full h-auto object-cover"
-                    loading="lazy"
-                  />
+                  <Link href={`/cursos/${course.slug}`} className="group block">
+                    <Image
+                      src={course.image_full_url || course.image_url}
+                      alt={`${course.title} — ${course.date}`}
+                      width={800}
+                      height={400}
+                      className="w-full h-auto object-cover group-hover:opacity-95 transition-opacity"
+                      loading="lazy"
+                    />
+                  </Link>
                   <div className="p-8">
                     <p className="font-stats text-xs font-medium text-teal uppercase tracking-wider mb-2">
                       {course.date}
                     </p>
                     <h2 className="font-display text-2xl font-bold text-navy mb-3">
-                      {course.title}
+                      <Link href={`/cursos/${course.slug}`} className="hover:text-teal transition-colors">
+                        {course.title}
+                      </Link>
                     </h2>
                     <p className="text-gray-500 leading-relaxed mb-6">{course.description}</p>
                     <div className="flex flex-wrap gap-4">
                       <a
-                        href={course.programPdf}
+                        href={course.program_pdf}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-2 px-5 py-2.5 bg-ice text-navy font-display font-semibold text-sm rounded-full hover:bg-teal hover:text-white transition-all"
@@ -67,15 +80,13 @@ export default function CursosPage() {
                         <FileText className="w-4 h-4" />
                         Descargar programa
                       </a>
-                      <a
-                        href={siteConfig.whatsappHref}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                      <Link
+                        href={`/cursos/${course.slug}#inscripcion`}
                         className="inline-flex items-center gap-2 px-5 py-2.5 bg-teal text-white font-display font-semibold text-sm rounded-full hover:bg-cyan transition-all"
                       >
                         Inscribirse
                         <ArrowRight className="w-4 h-4" />
-                      </a>
+                      </Link>
                     </div>
                   </div>
                 </div>

@@ -38,6 +38,8 @@ export default function BannersPage() {
   const [formVideoUrl, setFormVideoUrl] = useState('')
   const [formVideoStart, setFormVideoStart] = useState('')
   const [formVideoEnd, setFormVideoEnd] = useState('')
+  const [formGradientColor, setFormGradientColor] = useState('#0B1D3A')
+  const [formGradientOpacity, setFormGradientOpacity] = useState(65)
   const [formActive, setFormActive] = useState(true)
   const [saving, setSaving] = useState(false)
   const [mediaPicker, setMediaPicker] = useState(false)
@@ -69,6 +71,8 @@ export default function BannersPage() {
     setFormVideoUrl(b.video_url ?? '')
     setFormVideoStart(b.video_start ? String(b.video_start) : '')
     setFormVideoEnd(b.video_end ? String(b.video_end) : '')
+    setFormGradientColor(b.gradient_color ?? '#0B1D3A')
+    setFormGradientOpacity(b.gradient_opacity ?? 65)
     setFormActive(b.active)
   }
 
@@ -87,6 +91,8 @@ export default function BannersPage() {
     setFormVideoUrl('')
     setFormVideoStart('')
     setFormVideoEnd('')
+    setFormGradientColor('#0B1D3A')
+    setFormGradientOpacity(65)
     setFormActive(true)
     setShowAdd(true)
   }
@@ -107,6 +113,8 @@ export default function BannersPage() {
     fd.append('video_url', formVideoUrl)
     fd.append('video_start', formVideoStart)
     fd.append('video_end', formVideoEnd)
+    fd.append('gradient_color', formGradientColor)
+    fd.append('gradient_opacity', String(formGradientOpacity))
     if (formImage) fd.append('image', formImage)
     else if (formImagePreview) fd.append('image_url', formImagePreview)
 
@@ -328,6 +336,38 @@ export default function BannersPage() {
                   <div className="absolute w-4 h-4 rounded-full bg-primary border-2 border-admin-bg shadow-md" style={{ left: `${formTextX}%`, top: `${formTextY}%`, transform: 'translate(-50%,-50%)' }} />
                 </div>
               )}
+            </div>
+            <div>
+              <Label>Degradado del banner</Label>
+              <p className="text-xs text-muted-foreground mb-2">Color y opacidad del degradado que se superpone sobre la imagen de fondo del banner.</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="gradient_color" className="text-xs text-muted-foreground">Color</Label>
+                  <div className="mt-1 flex items-center gap-2">
+                    <input
+                      id="gradient_color"
+                      type="color"
+                      value={formGradientColor}
+                      onChange={(e) => setFormGradientColor(e.target.value)}
+                      className="h-9 w-12 rounded border border-input bg-transparent"
+                    />
+                    <Input value={formGradientColor} onChange={(e) => setFormGradientColor(e.target.value)} />
+                  </div>
+                </div>
+                <div>
+                  <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
+                    <span>Opacidad</span><span>{formGradientOpacity}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={formGradientOpacity}
+                    onChange={(e) => setFormGradientOpacity(Number(e.target.value))}
+                    className="w-full"
+                  />
+                </div>
+              </div>
             </div>
             <div>
               <Label>Vídeo de fondo (opcional)</Label>

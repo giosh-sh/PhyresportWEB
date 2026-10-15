@@ -2,24 +2,26 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
-import { courses, siteConfig } from "@/lib/data";
+import { courses as staticCourses, siteConfig } from "@/lib/data";
+import { getPublicCourse } from "@/lib/courses";
 import HeaderWrapper from "@/components/layout/header-wrapper";
 import { Footer } from "@/components/layout/footer";
 import { WhatsAppFloat } from "@/components/ui/whatsapp-float";
 import { ScrollReveal } from "@/components/ui/scroll-reveal";
-import { ArrowLeft, FileText, ArrowRight } from "lucide-react";
+import { CourseRegistrationForm } from "@/components/sections/course-registration-form";
+import { ArrowLeft, FileText } from "lucide-react";
 
 interface Props {
   params: Promise<{ slug: string }>;
 }
 
-export async function generateStaticParams() {
-  return courses.map((c) => ({ slug: c.slug }));
+export function generateStaticParams() {
+  return staticCourses.map((c) => ({ slug: c.slug }));
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const course = courses.find((c) => c.slug === slug);
+  const course = await getPublicCourse(slug);
   if (!course) return {};
   return {
     title: course.title,
@@ -29,7 +31,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function CourseDetailPage({ params }: Props) {
   const { slug } = await params;
-  const course = courses.find((c) => c.slug === slug);
+  const course = await getPublicCourse(slug);
   if (!course) notFound();
 
   return (
@@ -40,7 +42,7 @@ export default async function CourseDetailPage({ params }: Props) {
         <section className="relative pt-28 pb-16 lg:pt-36 lg:pb-20 bg-navy overflow-hidden">
           <div className="absolute inset-0">
             <Image
-              src={course.imageFull}
+              src={course.image_full_url || course.image_url}
               alt=""
               fill
               className="object-cover opacity-10"
@@ -69,7 +71,7 @@ export default async function CourseDetailPage({ params }: Props) {
           <div className="mx-auto max-w-3xl px-6">
             <ScrollReveal>
               <Image
-                src={course.imageFull}
+                src={course.image_full_url || course.image_url}
                 alt={`${course.title} — ${course.date}`}
                 width={800}
                 height={500}
@@ -87,7 +89,7 @@ export default async function CourseDetailPage({ params }: Props) {
             <ScrollReveal delay={200}>
               <div className="flex flex-wrap gap-4 mb-10">
                 <a
-                  href={course.programPdf}
+                  href={course.program_pdf}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 px-6 py-3 bg-ice text-navy font-display font-semibold text-sm rounded-full hover:bg-teal hover:text-white transition-all"
@@ -96,20 +98,38 @@ export default async function CourseDetailPage({ params }: Props) {
                   Descargar programa completo
                 </a>
                 <a
-                  href={siteConfig.whatsappHref}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  href="#inscripcion"
                   className="inline-flex items-center gap-2 px-6 py-3 bg-teal text-white font-display font-semibold text-sm rounded-full hover:bg-cyan transition-all"
                 >
-                  Inscribirse por WhatsApp
-                  <ArrowRight className="w-4 h-4" />
+                  Inscribirme en este curso
                 </a>
+              </div>
+            </ScrollReveal>
+
+            {/* Inscripción */}
+            <ScrollReveal delay={250}>
+              <div
+                id="inscripcion"
+                className="scroll-mt-28 rounded-2xl border border-gray-100 bg-white p-8 shadow-sm"
+              >
+                <h2 className="font-display text-2xl font-bold text-navy mb-2">
+                  Inscripción al curso
+                </h2>
+                <p className="text-gray-500 mb-6">
+                  Rellena el formulario y te contactaremos con los siguientes pasos. No es necesario
+                  tener cuenta.
+                </p>
+                <CourseRegistrationForm
+                  courseId={course.id}
+                  courseSlug={course.slug}
+                  courseTitle={course.title}
+                />
               </div>
             </ScrollReveal>
 
             {/* BonificaTuCurso */}
             <ScrollReveal delay={300}>
-              <div className="bg-ice rounded-xl p-8 text-center">
+              <div className="mt-10 bg-ice rounded-xl p-8 text-center">
                 <a
                   href={siteConfig.bonificaTuCurso}
                   target="_blank"

@@ -129,3 +129,70 @@ export function sanitizeNotificationSettings(value: Partial<NotificationSettings
     notification_email: email,
   }
 }
+
+const COURSES_FROM_EMAIL =
+  process.env.RESEND_FROM_EMAIL || 'Phyresport Web <onboarding@resend.dev>'
+
+export interface CourseRegistrationEmailData {
+  name: string
+  email: string
+  phone?: string
+  message?: string
+  courseTitle: string
+  courseDate?: string
+  courseSlug?: string
+}
+
+// Envía un aviso por correo cuando alguien se inscribe a un curso.
+// Nunca lanza excepciones: un fallo de email no debe bloquear el registro.
+export async function sendCourseRegistrationNotification(
+  data: CourseRegistrationEmailData
+): Promise<void> {
+  if (!process.env.RESEND_API_KEY) {
+    console.warn('[courses] RESEND_API_KEY not configured, skipping registration email')
+    return
+  }
+
+  let to = 'info@phyresport.com'
+  try {
+    const settings = await getNotificationSettings()
+    const configured = settings?.notification_email?.trim()
+    if (configured && isValidEmail(configured)) to = configured
+  } catch {
+    // usa el email por defecto
+  }
+
+  const subject = `Nueva inscripción — ${data.courseTitle}`
+  const content = [
+    `Curso: ${data.courseTitle}${data.courseDate ? ` (${data.courseDate})` : ''}`,
+    `Nombre: ${data.name}`,
+    `Email: ${data.email}`,
+    data.phone ? `Teléfono: ${data.phone}` : '',
+    data.message ? `Mensaje: ${data.message}` : '',
+  ]
+    .filter(Boolean)
+    .join('\n')
+
+  try {
+    const html = await render(
+      BaseEmail({
+        title: 'Nueva inscripción a un curso',
+        previewText: subject,
+        content,
+        ctaText: 'Ver inscripciones',
+        ctaUrl: `${APP_URL}/admin/cursos`,
+      })
+    )
+    const resend = new Resend(process.env.RESEND_API_KEY)
+    const { error } = await resend.emails.send({
+      from: COURSES_FROM_EMAIL,
+      to,
+      replyTo: data.email,
+      subject,
+      html,
+    })
+    if (error) console.error('[courses] Resend error:', error.message)
+  } catch (e) {
+    console.error('[courses] Failed to send registration email:', e)
+  }
+}

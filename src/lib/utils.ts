@@ -44,3 +44,22 @@ export function formatPriceRaw(price: number, currency?: string, locale?: string
     currency: curr,
   }).format(price);
 }
+
+/**
+ * Convierte un color hex (#RRGGBB o #RGB) + opacidad (0-100) a rgba().
+ * Si el color no es válido, usa el navy de Phyresport.
+ */
+export function hexToRgba(hex: string | null | undefined, opacity = 100): string {
+  const fallback = "11, 29, 58"; // #0B1D3A
+  let value = (hex || "").trim().replace("#", "");
+  if (value.length === 3) {
+    value = value.split("").map((c) => c + c).join("");
+  }
+  const valid = /^[0-9a-fA-F]{6}$/.test(value);
+  const r = valid ? parseInt(value.slice(0, 2), 16) : 11;
+  const g = valid ? parseInt(value.slice(2, 4), 16) : 29;
+  const b = valid ? parseInt(value.slice(4, 6), 16) : 58;
+  const a = Math.min(100, Math.max(0, opacity)) / 100;
+  if (!valid) return `rgba(${fallback}, ${a})`;
+  return `rgba(${r}, ${g}, ${b}, ${a})`;
+}

@@ -240,11 +240,59 @@ export interface Banner {
   text_y: number | null;
   title_color: string | null;
   subtitle_color: string | null;
+  gradient_color: string | null;
+  gradient_opacity: number | null;
   video_url: string | null;
   video_start: number | null;
   video_end: number | null;
   created_at: string;
   updated_at: string;
+}
+
+export type RegistrationStatus = "pending" | "contacted" | "confirmed" | "cancelled";
+
+export const REGISTRATION_STATUS_LABELS: Record<RegistrationStatus, string> = {
+  pending: "Pendiente",
+  contacted: "Contactado",
+  confirmed: "Confirmado",
+  cancelled: "Cancelado",
+};
+
+export const REGISTRATION_STATUS_OPTIONS: { value: RegistrationStatus; label: string }[] = [
+  { value: "pending", label: "Pendiente" },
+  { value: "contacted", label: "Contactado" },
+  { value: "confirmed", label: "Confirmado" },
+  { value: "cancelled", label: "Cancelado" },
+];
+
+export interface AdminCourse {
+  id: string;
+  slug: string;
+  title: string;
+  date: string;
+  description: string;
+  image_url: string;
+  image_full_url: string;
+  program_pdf: string;
+  active: boolean;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+  registration_count?: number;
+}
+
+export interface CourseRegistration {
+  id: string;
+  course_id: string | null;
+  course_slug: string;
+  course_title: string;
+  name: string;
+  email: string;
+  phone: string;
+  message: string;
+  user_id: string | null;
+  status: RegistrationStatus;
+  created_at: string;
 }
 
 export interface DashboardMetrics {

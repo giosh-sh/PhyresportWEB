@@ -47,9 +47,11 @@ function categoryHref(cat: Category): string {
 export function Header({
   solid = false,
   categories = [],
+  isAdmin = false,
 }: {
   solid?: boolean;
   categories?: Category[];
+  isAdmin?: boolean;
 }) {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -101,7 +103,7 @@ export function Header({
 
           {/* Desktop Nav */}
           <nav
-            className="hidden xl:flex flex-1 min-w-0 items-center justify-center gap-6 2xl:gap-8 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            className="hidden xl:flex flex-1 min-w-0 items-center justify-center gap-6 2xl:gap-8"
             aria-label="Navegación principal"
           >
             {navItems.map((item) => {
@@ -169,7 +171,7 @@ export function Header({
                 </UserButton.MenuItems>
               </UserButton>
             </Show>
-            <AdminLink />
+            <AdminLink isAdmin={isAdmin} />
 
             <a
               href={siteConfig.whatsappHref}
@@ -277,7 +279,7 @@ export function Header({
               Favoritos
             </Link>
             <CartButton mobile />
-            <AdminLink mobile />
+            <AdminLink isAdmin={isAdmin} mobile />
           </div>
           </div>
         </div>
@@ -325,12 +327,12 @@ function CartButton({ mobile }: { mobile?: boolean }) {
   );
 }
 
-function AdminLink({ mobile }: { mobile?: boolean }) {
+function AdminLink({ mobile, isAdmin }: { mobile?: boolean; isAdmin?: boolean }) {
   const { isSignedIn, user } = useUser();
   const role = (user?.publicMetadata as { role?: string } | undefined)?.role;
-  const isAdmin = !!isSignedIn && role === "admin";
+  const hasAccess = isAdmin || (!!isSignedIn && role === "admin");
 
-  if (!isAdmin) return null;
+  if (!hasAccess) return null;
 
   if (mobile) {
     return (

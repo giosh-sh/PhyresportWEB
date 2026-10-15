@@ -1,8 +1,10 @@
 import Image from "next/image";
 import Link from "next/link";
-import { siteConfig, team } from "@/lib/data";
+import { siteConfig } from "@/lib/data";
 import { ArrowRight } from "lucide-react";
 import { createPublicClient } from "@/lib/supabase/public";
+import { hexToRgba } from "@/lib/utils";
+import { HeroTeam } from "@/components/sections/hero-team";
 
 const stats = [
   { number: "+15", label: "Años de experiencia" },
@@ -11,26 +13,53 @@ const stats = [
 ];
 
 const DEFAULT_BG = "https://www.phyresport.com/images/sampledata/asimage/home/home.jpg";
+const DEFAULT_GRADIENT_COLOR = "#0B1D3A";
+const DEFAULT_GRADIENT_OPACITY = 65;
 
-async function getHeroBackground(): Promise<string> {
+interface HeroBanner {
+  bg: string;
+  gradientColor: string;
+  gradientOpacity: number;
+}
+
+async function getHeroBanner(): Promise<HeroBanner> {
+  const fallback: HeroBanner = {
+    bg: DEFAULT_BG,
+    gradientColor: DEFAULT_GRADIENT_COLOR,
+    gradientOpacity: DEFAULT_GRADIENT_OPACITY,
+  };
   try {
     const supabase = createPublicClient();
     const { data } = await supabase
       .from("banners")
-      .select("id, image_url")
+      .select("image_url, gradient_color, gradient_opacity")
       .eq("active", true)
       .not("image_url", "is", null)
       .order("sort_order", { ascending: true })
       .limit(1);
-    const url = (data?.[0]?.image_url as string) ?? "";
-    return url || DEFAULT_BG;
+    const banner = data?.[0];
+    if (!banner) return fallback;
+    const opacity =
+      typeof banner.gradient_opacity === "number" ? banner.gradient_opacity : DEFAULT_GRADIENT_OPACITY;
+    return {
+      bg: (banner.image_url as string) || DEFAULT_BG,
+      gradientColor: (banner.gradient_color as string) || DEFAULT_GRADIENT_COLOR,
+      gradientOpacity: opacity,
+    };
   } catch {
-    return DEFAULT_BG;
+    return fallback;
   }
 }
 
 export async function HeroSection() {
-  const bg = await getHeroBackground();
+  const { bg, gradientColor, gradientOpacity } = await getHeroBanner();
+
+  const overlayStyle: React.CSSProperties = {
+    background: `linear-gradient(135deg, ${hexToRgba(gradientColor, gradientOpacity)} 0%, ${hexToRgba(
+      gradientColor,
+      gradientOpacity
+    )} 45%, ${hexToRgba(gradientColor, Math.max(0, gradientOpacity - 30))} 100%)`,
+  };
 
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden bg-navy" id="inicio">
@@ -40,10 +69,10 @@ export async function HeroSection() {
           src={bg}
           alt=""
           fill
-          className="object-cover opacity-15 saturate-[0.3]"
+          className="object-cover opacity-25 saturate-[0.35]"
           priority
         />
-        <div className="absolute inset-0 bg-gradient-to-br from-navy/95 via-navy/80 to-cyan/30" />
+        <div className="absolute inset-0" style={overlayStyle} />
       </div>
 
       {/* Content */}
@@ -116,24 +145,7 @@ export async function HeroSection() {
             </div>
 
             {/* Team cluster */}
-            <div className="mt-6 flex items-center gap-3 bg-white/[0.08] border border-white/12 rounded-full py-2.5 px-5 backdrop-blur-md">
-              <div className="flex">
-                {team.slice(0, 5).map((member, i) => (
-                  <Image
-                    key={member.slug}
-                    src={member.image}
-                    alt=""
-                    width={36}
-                    height={36}
-                    className={`w-9 h-9 rounded-full border-2 border-navy object-cover object-top ${i > 0 ? "-ml-2.5" : ""}`}
-                  />
-                ))}
-              </div>
-              <div className="text-xs text-white/80 font-medium leading-tight">
-                <strong className="block text-white font-stats font-bold">7 especialistas</strong>
-                te atienden en Tenerife
-              </div>
-            </div>
+            <HeroTeam />
           </div>
         </div>
       </div>
