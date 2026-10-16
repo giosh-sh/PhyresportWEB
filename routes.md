@@ -150,6 +150,7 @@ Detalles de flujo:
 | `/api/public/payments` | GET | pública | Métodos de pago activos desde `settings.payments`. `revalidate=60` |
 | `/api/discount/validate` | POST | pública | Valida un código de descuento y devuelve `discountAmountCents` |
 | `/api/contact` | POST | pública | Envía email de contacto con Resend a `info@phyresport.com` |
+| `/api/citas/slots` | GET | pública | Franjas libres para reservar cita (`date`, `serviceId`, `professionalId`) |
 | `/api/checkout` | POST | opcional (Clerk) | Crea pedido y sesión Stripe (o pedido Bizum). Ver lógica abajo |
 | `/api/verify-payment` | GET | pública | Verifica `session_id` de Stripe, marca pedido `paid`, envía email |
 | `/api/webhooks/stripe` | POST | firma Stripe | Webhook: `checkout.session.completed`/async/expired → stock, estado, emails |
@@ -178,7 +179,7 @@ Todas llevan `'use server'`. Cada página de `/admin` importa las suyas.
 
 | Archivo | Funciones principales |
 |---|---|
-| `admin-auth.ts` (en `lib/`) | `isAdmin(userId)`, `requireAdmin()` (rol Clerk `publicMetadata.role === "admin"` o env `ADMIN_USER_ID(S)`) |
+| `admin-auth.ts` (en `lib/`) | `isAdmin(userId)`, `requireAdmin()` (rol Clerk `publicMetadata.role === "admin"` o env `ADMIN_USER_ID(S)`). Desde el módulo de citas: `getUserRole()`, `isStaff()`, `requireStaff()` (admin **o** `fisio`, o env `FISIO_USER_ID(S)`) |
 | `orders.ts` | `getOrders`, `getOrder`, `createOrder`, `updateOrderStatus`, `bulkUpdateOrdersStatus`, `bulkDeleteOrders`, `updateOrderNotes`, `updateOrderShipping`, `getStripeSessionUrl`, `verifyStripePayment`, y métricas de dashboard (`getDashboardMetrics`, `getRevenueChart`, `getTopSellingProducts`, `getLowStockProducts`, `getRecentCustomers`, `getQuickDashboard`) |
 | `products.ts` | `getProducts`, `getProduct`, `createProduct`, `updateProduct`, `deleteProduct`, `bulkDeleteProducts`, `bulkUpdateProducts`, `duplicateProduct`, `quickUpdateProduct` |
 | `categories.ts` | `getCategories`, `reorderCategories`, `createCategory`, `updateCategory`, `deleteCategory`, `uploadCategoryImage` |
@@ -221,6 +222,17 @@ envuelve con `AdminLayoutClient`.
 
 No hay ruta `/admin/login`: el acceso es mediante Clerk; el enlace "Admin" del
 header solo aparece si `user.publicMetadata.role === "admin"`.
+
+---
+
+## 8b. Módulo de citas (`/citas` y `/gestioncitas`)
+
+- **Público `/citas`**: asistente por pasos (servicio → profesional o "cualquiera disponible" → fecha/hora → datos). La server action pública `createPublicBooking` valida solapamientos y crea la cita vía RPC; envía email de confirmación (paciente) y aviso (clínica) con Resend.
+- **Interno `/gestioncitas`**: layout protegido con `isStaff` (admin **o** fisio). Dashboard con vistas **Día/Semana/Mes/Agenda**, vista de recursos por profesional (columnas), creación/edición/**reprogramación con drag & drop**, cambio de estado, reasignación y gestión de **disponibilidad semanal** y **bloqueos**.
+- Lógica en `src/lib/citas/`: `types.ts` (modelos/estados), `slots.ts` (zona horaria **Atlantic/Canary**, generación de franjas, colisiones, asignación equilibrada), `actions.ts` (server actions de staff y públicas), `emails.ts`.
+- Componentes en `src/components/citas/`: `BookingWizard`, `CitasDashboard`, `AppointmentDialog`, `AvailabilityManager`.
+- BD: `supabase/phyresport-appointments.sql` → `professionals`, `booking_services`, `availability`, `time_off`, `appointments` + RPC `create_appointment`/`reschedule_appointment`. Horario por defecto L-V 10:00–21:00 y duración estándar 60 min (editable).
+- API: `GET /api/citas/slots` (pública) devuelve franjas libres.
 
 ---
 
@@ -267,6 +279,7 @@ STRIPE_WEBHOOK_SECRET
 RESEND_API_KEY
 RESEND_FROM                      # opcional, remitente por defecto
 ADMIN_USER_ID / ADMIN_USER_IDS   # opcional, IDs de Clerk admin (comma-separated)
+FISIO_USER_ID / FISIO_USER_IDS   # opcional, IDs de Clerk fisio (acceso a /gestioncitas)
 ```
 
 Auth admin por dos vías: env `ADMIN_USER_ID(S)` o `publicMetadata.role = "admin"`
