@@ -26,42 +26,51 @@ export function QuickAddBar({
     e?.preventDefault();
     if (!text.trim()) return;
     setLoading(true);
+    try {
+      const todayKey = formatInTimeZone(new Date(), CLINIC_TZ, "yyyy-MM-dd");
+      const parsed = parseQuickSession(text, professionals, services, todayKey);
+      if (parsed.error) {
+        toast.error(parsed.error);
+        return;
+      }
 
-    const todayKey = formatInTimeZone(new Date(), CLINIC_TZ, "yyyy-MM-dd");
-    const parsed = parseQuickSession(text, professionals, services, todayKey);
-    if (parsed.error) {
+      const startISO = zonedDateTimeToUtc(parsed.date!, parsed.startTime!).toISOString();
+      const res = await createManualAppointment({
+        professionalId: parsed.professionalId!,
+        serviceId: parsed.serviceId ?? services[0]?.id ?? "",
+        startISO,
+        patientName: "Cita rápida",
+        durationMinutes: parsed.durationMinutes,
+        status: "confirmada",
+      });
+
+      if (res.conflict) {
+        const times = (res.suggestions ?? [])
+          .map((s) => formatInTimeZone(new Date(s), CLINIC_TZ, "HH:mm"))
+          .join(", ");
+        toast.warning(`${res.message}${times ? ` — prueba a las: ${times}` : ""}`);
+        return;
+      }
+      if (res.error) {
+        toast.error(res.error);
+        return;
+      }
+      toast.success(
+        `Sesión añadida el ${formatInTimeZone(
+          zonedDateTimeToUtc(parsed.date!, parsed.startTime!),
+          CLINIC_TZ,
+          "d MMM 'a las' HH:mm",
+          { locale: es }
+        )}`
+      );
+      setText("");
+      onCreated();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "No se pudo añadir la sesión.";
+      toast.error(message);
+    } finally {
       setLoading(false);
-      toast.error(parsed.error);
-      return;
     }
-
-    const startISO = zonedDateTimeToUtc(parsed.date!, parsed.startTime!).toISOString();
-    const res = await createManualAppointment({
-      professionalId: parsed.professionalId!,
-      serviceId: parsed.serviceId ?? services[0]?.id ?? "",
-      startISO,
-      patientName: "Cita rápida",
-      durationMinutes: parsed.durationMinutes,
-      status: "confirmada",
-    });
-
-    setLoading(false);
-    if (res.conflict) {
-      const times = (res.suggestions ?? [])
-        .map((s) => formatInTimeZone(new Date(s), CLINIC_TZ, "HH:mm"))
-        .join(", ");
-      toast.warning(`${res.message}${times ? ` — prueba a las: ${times}` : ""}`);
-      return;
-    }
-    if (res.error) {
-      toast.error(res.error);
-      return;
-    }
-    toast.success(
-      `Sesión añadida el ${formatInTimeZone(zonedDateTimeToUtc(parsed.date!, parsed.startTime!), CLINIC_TZ, "d MMM 'a las' HH:mm", { locale: es })}`
-    );
-    setText("");
-    onCreated();
   }
 
   return (

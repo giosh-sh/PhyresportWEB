@@ -310,7 +310,8 @@ export async function createManualAppointment(
   if (!input.serviceId) return { error: "Selecciona un servicio." };
   if (!input.patientName?.trim()) return { error: "El nombre del paciente es obligatorio." };
 
-  const supabase = createAdminClient();
+  try {
+    const supabase = createAdminClient();
   const { data: service } = await supabase
     .from("booking_services")
     .select("duration_minutes")
@@ -371,6 +372,9 @@ export async function createManualAppointment(
 
   revalidatePath("/gestioncitas");
   return { success: true, id: data as string };
+  } catch (e: any) {
+    return { error: e?.message || "Error al crear la cita." };
+  }
 }
 
 export async function updateAppointmentStatus(
@@ -445,6 +449,7 @@ export async function rescheduleAppointment(
   if (!(await canManageAppointment(userId, id))) {
     return { error: "Solo puedes mover tus propias citas." };
   }
+  try {
   const supabase = createAdminClient();
 
   let duration = durationMinutes && durationMinutes > 0 ? durationMinutes : 0;
@@ -502,6 +507,9 @@ export async function rescheduleAppointment(
   }
   revalidatePath("/gestioncitas");
   return { success: true };
+  } catch (e: any) {
+    return { error: e?.message || "Error al reprogramar la cita." };
+  }
 }
 
 export async function deleteAppointment(id: string): Promise<{ success?: boolean; error?: string }> {
