@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import { auth } from "@clerk/nextjs/server";
 import { CitasDashboard } from "@/components/citas/CitasDashboard";
+import { getUserRole } from "@/lib/admin-auth";
 import { getBookingServices, getCurrentProfessional, getProfessionals } from "@/lib/citas/actions";
 
 export const metadata: Metadata = {
@@ -8,10 +10,12 @@ export const metadata: Metadata = {
 };
 
 export default async function GestionCitasPage() {
-  const [professionals, services, current] = await Promise.all([
+  const { userId } = await auth();
+  const [professionals, services, current, role] = await Promise.all([
     getProfessionals(true),
     getBookingServices(true),
     getCurrentProfessional(),
+    getUserRole(userId),
   ]);
 
   return (
@@ -19,6 +23,7 @@ export default async function GestionCitasPage() {
       professionals={professionals}
       services={services}
       currentProfessionalId={current?.id ?? null}
+      isAdmin={role === "admin"}
     />
   );
 }

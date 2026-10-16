@@ -33,6 +33,7 @@ import {
 import { getAppointmentsBetween, rescheduleAppointment } from "@/lib/citas/actions";
 import { AppointmentDialog } from "./AppointmentDialog";
 import { AvailabilityManager } from "./AvailabilityManager";
+import { ConfigManager } from "./ConfigManager";
 
 type ViewMode = "day" | "week" | "month" | "agenda";
 
@@ -68,10 +69,12 @@ export function CitasDashboard({
   professionals,
   services,
   currentProfessionalId,
+  isAdmin = false,
 }: {
   professionals: Professional[];
   services: BookingService[];
   currentProfessionalId: string | null;
+  isAdmin?: boolean;
 }) {
   const [tab, setTab] = useState("agenda");
   const [view, setView] = useState<ViewMode>("week");
@@ -201,6 +204,7 @@ export function CitasDashboard({
         <TabsList>
           <TabsTrigger value="agenda">Agenda</TabsTrigger>
           <TabsTrigger value="disponibilidad">Disponibilidad</TabsTrigger>
+          {isAdmin && <TabsTrigger value="configuracion">Configuración</TabsTrigger>}
         </TabsList>
 
         <TabsContent value="agenda" className="mt-4">
@@ -317,8 +321,17 @@ export function CitasDashboard({
         </TabsContent>
 
         <TabsContent value="disponibilidad" className="mt-4">
-          <AvailabilityManager professionals={professionals} lockedProfessionalId={null} />
+          <AvailabilityManager
+            professionals={professionals}
+            lockedProfessionalId={isAdmin ? null : currentProfessionalId}
+          />
         </TabsContent>
+
+        {isAdmin && (
+          <TabsContent value="configuracion" className="mt-4">
+            <ConfigManager />
+          </TabsContent>
+        )}
       </Tabs>
 
       <AppointmentDialog
