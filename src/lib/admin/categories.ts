@@ -85,8 +85,7 @@ export async function reorderCategories(orderedIds: string[]) {
     const { error } = await supabase
       .from("categories")
       .update({ sort_order: i })
-      .eq("id", orderedIds[i])
-      .is("parent_id", null);
+      .eq("id", orderedIds[i]);
     if (error) return { error: error.message };
   }
 

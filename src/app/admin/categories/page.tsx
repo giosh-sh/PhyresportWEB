@@ -123,6 +123,39 @@ export default function AdminCategoriesPage() {
     }
   }
 
+  function findSiblings(
+    nodes: AdminCategory[],
+    id: string,
+    parentId: string | null = null
+  ): { siblings: AdminCategory[]; parentId: string | null } | null {
+    if (nodes.some((n) => n.id === id)) return { siblings: nodes, parentId }
+    for (const n of nodes) {
+      const found = findSiblings(n.children ?? [], id, n.id)
+      if (found) return found
+    }
+    return null
+  }
+
+  function reorderNodes(
+    nodes: AdminCategory[],
+    parentId: string | null,
+    orderedIds: string[]
+  ): AdminCategory[] {
+    if (parentId === null) {
+      const map = new Map(nodes.map((n) => [n.id, n]))
+      return orderedIds.map((id) => map.get(id)).filter((n): n is AdminCategory => !!n)
+    }
+    return nodes.map((n) => ({
+      ...n,
+      children:
+        n.id === parentId
+          ? orderedIds
+              .map((id) => n.children?.find((c) => c.id === id))
+              .filter((c): c is AdminCategory => !!c)
+          : reorderNodes(n.children ?? [], parentId, orderedIds),
+    }))
+  }
+
   async function handleDrop(targetId: string) {
     if (!dragId || dragId === targetId) {
       setDragId(null)
@@ -130,22 +163,23 @@ export default function AdminCategoriesPage() {
       return
     }
 
-    const ids = data.map((c) => c.id)
-    const from = ids.indexOf(dragId)
-    const to = ids.indexOf(targetId)
-    if (from < 0 || to < 0) {
-      setDragId(null)
-      setOverId(null)
+    const dragged = findSiblings(data, dragId)
+    const target = findSiblings(data, targetId)
+    setDragId(null)
+    setOverId(null)
+    if (!dragged || !target) return
+    if (dragged.parentId !== target.parentId) {
+      toast.error('Solo puedes reordenar dentro del mismo nivel')
       return
     }
 
+    const ids = dragged.siblings.map((c) => c.id)
+    const from = ids.indexOf(dragId)
+    const to = ids.indexOf(targetId)
+    if (from < 0 || to < 0) return
+
     ids.splice(to, 0, ids.splice(from, 1)[0])
-    const nextData = ids
-      .map((id) => data.find((c) => c.id === id))
-      .filter((c): c is AdminCategory => !!c)
-    setData(nextData)
-    setDragId(null)
-    setOverId(null)
+    setData(reorderNodes(data, dragged.parentId, ids))
 
     const res = await reorderCategories(ids)
     if (res.error) {
@@ -158,7 +192,7 @@ export default function AdminCategoriesPage() {
 
   function renderCategory(cat: AdminCategory, depth = 0) {
     const indent = depth * 24
-    const draggable = depth === 0
+    const draggable = true
     return (
       <div key={cat.id}>
         <div
