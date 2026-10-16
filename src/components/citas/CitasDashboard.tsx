@@ -507,7 +507,7 @@ function DraggableAppointment({
     <div
       ref={setNodeRef}
       style={style}
-      className={`absolute inset-x-1 overflow-hidden rounded-md border border-gray-100 border-l-4 bg-white px-2 py-1 text-left shadow-sm ${
+      className={`absolute inset-1 overflow-hidden rounded-md border border-gray-100 border-l-4 bg-white px-2 py-1 text-left shadow-sm ${
         compact ? "" : "cursor-grab active:cursor-grabbing"
       } ${appt.status === "cancelada" ? "opacity-50 line-through" : ""}`}
       {...attributes}
