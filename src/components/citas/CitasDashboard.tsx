@@ -236,7 +236,8 @@ export function CitasDashboard({
 
     // Actualización optimista: mueve la cita al instante, sin recargar.
     const previous = appointments;
-    const durationMs = appt.service_duration * 60_000;
+    const durationMs =
+      new Date(appt.end_at).getTime() - new Date(appt.start_at).getTime();
     const optimistic: AppointmentFull = {
       ...appt,
       professional_id: professionalId,
@@ -747,7 +748,13 @@ function DayView({
                 {colAppts.map((a) => {
                   const mins = minutesOfDay(a.start_at);
                   const top = ((mins - GRID_START_HOUR * 60) / ROW_MINUTES) * ROW_HEIGHT;
-                  const height = Math.max(28, (a.service_duration / ROW_MINUTES) * ROW_HEIGHT - 2);
+                  const durMin = Math.max(
+                    15,
+                    Math.round(
+                      (new Date(a.end_at).getTime() - new Date(a.start_at).getTime()) / 60000
+                    )
+                  );
+                  const height = Math.max(28, (durMin / ROW_MINUTES) * ROW_HEIGHT - 2);
                   return (
                     <div key={a.id} className="absolute inset-x-0 z-10" style={{ top, height }}>
                       <DraggableAppointment appt={a} color={a.professional_color} onEdit={onEdit} />
@@ -850,7 +857,11 @@ function WeekView({
               ...dayAppts.map((a) => ({
                 key: `a-${a.id}`,
                 start: clampGridMinute(minutesOfDay(a.start_at)),
-                end: clampGridMinute(minutesOfDay(a.start_at) + a.service_duration),
+                end: clampGridMinute(
+                  minutesOfDay(a.end_at) > minutesOfDay(a.start_at)
+                    ? minutesOfDay(a.end_at)
+                    : minutesOfDay(a.start_at) + 30
+                ),
                 kind: "appt" as const,
                 appt: a,
               })),

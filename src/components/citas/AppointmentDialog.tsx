@@ -49,6 +49,16 @@ function splitISO(iso: string): { date: string; time: string } {
   };
 }
 
+function timeToMinutes(t: string): number {
+  const [h, m] = t.split(":").map(Number);
+  return h * 60 + m;
+}
+function minutesToTime(m: number): string {
+  const h = Math.floor(m / 60) % 24;
+  const mm = m % 60;
+  return `${String(h).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
+}
+
 export function AppointmentDialog({
   open,
   onClose,
@@ -63,6 +73,7 @@ export function AppointmentDialog({
   const [professionalId, setProfessionalId] = useState("");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("10:00");
+  const [endTime, setEndTime] = useState("11:00");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -74,11 +85,13 @@ export function AppointmentDialog({
     if (!open) return;
     if (appointment) {
       const { date: d, time: t } = splitISO(appointment.start_at);
+      const end = formatInTimeZone(new Date(appointment.end_at), CLINIC_TZ, "HH:mm");
       // eslint-disable-next-line react-hooks/set-state-in-effect -- sincroniza el formulario al abrir
       setServiceId(appointment.service_id ?? services[0]?.id ?? "");
       setProfessionalId(appointment.professional_id ?? professionals[0]?.id ?? "");
       setDate(d);
       setTime(t);
+      setEndTime(end);
       setName(appointment.patient_name);
       setEmail(appointment.patient_email ?? "");
       setPhone(appointment.patient_phone ?? "");
@@ -86,10 +99,12 @@ export function AppointmentDialog({
       setStatus(appointment.status);
     } else {
       const start = defaultStartISO ? splitISO(defaultStartISO) : { date: "", time: "10:00" };
+      const dur = services[0]?.duration_minutes ?? 60;
       setServiceId(services[0]?.id ?? "");
       setProfessionalId(defaultProfessionalId ?? professionals[0]?.id ?? "");
       setDate(start.date || formatInTimeZone(new Date(), CLINIC_TZ, "yyyy-MM-dd"));
       setTime(start.time);
+      setEndTime(minutesToTime(timeToMinutes(start.time) + dur));
       setName("");
       setEmail("");
       setPhone("");
@@ -101,6 +116,8 @@ export function AppointmentDialog({
   async function handleSave() {
     if (!name.trim()) return toast.error("El nombre es obligatorio");
     if (!date || !time) return toast.error("Indica fecha y hora");
+    const duration = timeToMinutes(endTime) - timeToMinutes(time);
+    if (duration <= 0) return toast.error("La hora de fin debe ser posterior a la de inicio");
     const startISO = zonedDateTimeToUtc(date, time).toISOString();
     setSaving(true);
 
@@ -113,8 +130,15 @@ export function AppointmentDialog({
         notes,
         serviceId,
       });
-      if (!res.error && (appointment.start_at !== startISO || appointment.professional_id !== professionalId)) {
-        res = await rescheduleAppointment(appointment.id, professionalId, startISO);
+      const originalDuration = Math.round(
+        (new Date(appointment.end_at).getTime() - new Date(appointment.start_at).getTime()) / 60000
+      );
+      const scheduleChanged =
+        appointment.start_at !== startISO ||
+        appointment.professional_id !== professionalId ||
+        originalDuration !== duration;
+      if (!res.error && scheduleChanged) {
+        res = await rescheduleAppointment(appointment.id, professionalId, startISO, duration);
       }
       if (!res.error && appointment.status !== status) {
         res = await updateAppointmentStatus(appointment.id, status);
@@ -129,6 +153,7 @@ export function AppointmentDialog({
         patientPhone: phone,
         notes,
         status,
+        durationMinutes: duration,
       });
     }
 
@@ -168,7 +193,11 @@ export function AppointmentDialog({
               <Label>Servicio</Label>
               <select
                 value={serviceId}
-                onChange={(e) => setServiceId(e.target.value)}
+                onChange={(e) => {
+                  setServiceId(e.target.value);
+                  const svc = services.find((s) => s.id === e.target.value);
+                  if (svc) setEndTime(minutesToTime(timeToMinutes(time) + svc.duration_minutes));
+                }}
                 className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
               >
                 {services.map((s) => (
@@ -194,14 +223,35 @@ export function AppointmentDialog({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-3 gap-3">
             <div>
               <Label>Fecha</Label>
               <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="mt-1" />
             </div>
             <div>
-              <Label>Hora</Label>
-              <Input type="time" step={900} value={time} onChange={(e) => setTime(e.target.value)} className="mt-1" />
+              <Label>Hora inicio</Label>
+              <Input
+                type="time"
+                step={900}
+                value={time}
+                onChange={(e) => {
+                  const newStart = e.target.value;
+                  const prevDuration = timeToMinutes(endTime) - timeToMinutes(time);
+                  setTime(newStart);
+                  setEndTime(minutesToTime(timeToMinutes(newStart) + Math.max(15, prevDuration)));
+                }}
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label>Hora fin</Label>
+              <Input
+                type="time"
+                step={900}
+                value={endTime}
+                onChange={(e) => setEndTime(e.target.value)}
+                className="mt-1"
+              />
             </div>
           </div>
 

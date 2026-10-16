@@ -205,6 +205,7 @@ export interface AppointmentInput {
   patientPhone?: string;
   notes?: string;
   status?: AppointmentStatus;
+  durationMinutes?: number;
 }
 
 export async function createManualAppointment(
@@ -234,7 +235,10 @@ export async function createManualAppointment(
     .select("duration_minutes")
     .eq("id", input.serviceId)
     .maybeSingle();
-  const duration = service?.duration_minutes ?? 60;
+  const duration =
+    input.durationMinutes && input.durationMinutes > 0
+      ? input.durationMinutes
+      : service?.duration_minutes ?? 60;
 
   const { data, error } = await supabase.rpc("create_appointment", {
     p_professional_id: professionalId,
@@ -313,7 +317,8 @@ export async function updateAppointmentDetails(
 export async function rescheduleAppointment(
   id: string,
   professionalId: string,
-  startISO: string
+  startISO: string,
+  durationMinutes?: number
 ): Promise<{ success?: boolean; error?: string }> {
   let userId: string;
   try {
@@ -325,12 +330,16 @@ export async function rescheduleAppointment(
     return { error: "Solo puedes mover tus propias citas." };
   }
   const supabase = createAdminClient();
-  const { data: appt } = await supabase
-    .from("appointments")
-    .select("service_id, booking_services(duration_minutes)")
-    .eq("id", id)
-    .maybeSingle();
-  const duration = (appt as any)?.booking_services?.duration_minutes ?? 60;
+
+  let duration = durationMinutes && durationMinutes > 0 ? durationMinutes : 0;
+  if (!duration) {
+    const { data: appt } = await supabase
+      .from("appointments")
+      .select("service_id, booking_services(duration_minutes)")
+      .eq("id", id)
+      .maybeSingle();
+    duration = (appt as any)?.booking_services?.duration_minutes ?? 60;
+  }
 
   const { error } = await supabase.rpc("reschedule_appointment", {
     p_id: id,
