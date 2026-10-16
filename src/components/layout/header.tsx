@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { SignInButton, SignUpButton, Show, UserButton, useUser } from "@clerk/nextjs";
 import { siteConfig } from "@/lib/data";
-import { Menu, X, ShoppingBag, Heart, ChevronDown, Shield, Package } from "lucide-react";
+import { Menu, X, ShoppingBag, Heart, ChevronDown, Shield, Package, CalendarClock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCartStore } from "@/store/cart";
 import type { Category } from "@/types/product";
@@ -49,10 +49,12 @@ export function Header({
   solid = false,
   categories = [],
   isAdmin = false,
+  isStaff = false,
 }: {
   solid?: boolean;
   categories?: Category[];
   isAdmin?: boolean;
+  isStaff?: boolean;
 }) {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -173,6 +175,7 @@ export function Header({
               </UserButton>
             </Show>
             <AdminLink isAdmin={isAdmin} />
+            <GestionCitasLink isStaff={isStaff} />
 
             <a
               href={siteConfig.whatsappHref}
@@ -281,6 +284,7 @@ export function Header({
             </Link>
             <CartButton mobile />
             <AdminLink isAdmin={isAdmin} mobile />
+            <GestionCitasLink isStaff={isStaff} mobile />
           </div>
           </div>
         </div>
@@ -355,6 +359,36 @@ function AdminLink({ mobile, isAdmin }: { mobile?: boolean; isAdmin?: boolean })
     >
       <Shield className="w-3.5 h-3.5" />
       Admin
+    </Link>
+  );
+}
+
+function GestionCitasLink({ mobile, isStaff }: { mobile?: boolean; isStaff?: boolean }) {
+  const { isSignedIn, user } = useUser();
+  const role = (user?.publicMetadata as { role?: string } | undefined)?.role;
+  const hasAccess = isStaff || (!!isSignedIn && (role === "admin" || role === "fisio"));
+
+  if (!hasAccess) return null;
+
+  if (mobile) {
+    return (
+      <Link
+        href="/gestioncitas"
+        className="flex items-center gap-2 text-teal hover:text-white transition-colors font-display text-sm font-semibold"
+      >
+        <CalendarClock className="w-5 h-5" />
+        Gestión de citas
+      </Link>
+    );
+  }
+
+  return (
+    <Link
+      href="/gestioncitas"
+      className="hidden xl:flex items-center gap-1.5 px-3 py-2 rounded-full border border-teal/40 text-teal hover:bg-teal/10 hover:border-teal transition-all font-display text-xs font-semibold"
+    >
+      <CalendarClock className="w-3.5 h-3.5" />
+      Citas
     </Link>
   );
 }

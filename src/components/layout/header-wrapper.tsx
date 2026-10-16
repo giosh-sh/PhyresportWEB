@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { Header } from "@/components/layout/header";
 import { getCategories } from "@/services/supabase-store";
-import { isAdmin } from "@/lib/admin-auth";
+import { getUserRole } from "@/lib/admin-auth";
 import type { Category } from "@/types/product";
 
 function buildTree(flat: Category[]): Category[] {
@@ -25,11 +25,18 @@ export default async function HeaderWrapper({ solid = false }: { solid?: boolean
     categories = buildTree(await getCategories());
   } catch {}
 
-  let admin = false;
+  let role: "admin" | "fisio" | null = null;
   try {
     const { userId } = await auth();
-    admin = await isAdmin(userId);
+    role = await getUserRole(userId);
   } catch {}
 
-  return <Header solid={solid} categories={categories} isAdmin={admin} />;
+  return (
+    <Header
+      solid={solid}
+      categories={categories}
+      isAdmin={role === "admin"}
+      isStaff={role !== null}
+    />
+  );
 }
