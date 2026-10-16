@@ -242,3 +242,8 @@ CROSS JOIN (VALUES (1), (2), (3), (4), (5)) AS d(weekday)
 WHERE NOT EXISTS (
   SELECT 1 FROM availability a WHERE a.professional_id = p.id
 );
+
+-- 12. Categoría de navbar para /citas (gestionable y reordenable desde /admin/categories)
+INSERT INTO categories (name, slug, parent_id, description, url, is_collection, sort_order)
+VALUES ('Citas', 'citas', NULL, 'Reserva de citas online', '/citas', false, 5)
+ON CONFLICT (slug) DO NOTHING;

@@ -17,6 +17,20 @@ import type { AdminCategory } from '@/lib/admin/types'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 
+// Páginas internas que se pueden añadir al navbar con un clic.
+const PAGE_PRESETS: { label: string; name: string; url: string }[] = [
+  { label: 'Citas', name: 'Citas', url: '/citas' },
+  { label: 'Inicio', name: 'Inicio', url: '/' },
+  { label: 'Servicios', name: 'Servicios', url: '/servicios' },
+  { label: 'Cursos', name: 'Cursos', url: '/cursos' },
+  { label: 'Gym', name: 'Gym', url: '/gym' },
+  { label: 'Tecnología', name: 'Tecnología', url: '/#tecnologia' },
+  { label: 'Equipo', name: 'Equipo', url: '/#equipo' },
+  { label: 'Tienda', name: 'Tienda', url: '/tienda' },
+  { label: 'Productos', name: 'Productos', url: '/productos' },
+  { label: 'Contacto', name: 'Contacto', url: '/contacto' },
+]
+
 export default function AdminCategoriesPage() {
   const [data, setData] = useState<AdminCategory[]>([])
   const [loading, setLoading] = useState(true)
@@ -29,7 +43,6 @@ export default function AdminCategoriesPage() {
   const [saving, setSaving] = useState(false)
   const [dragId, setDragId] = useState<string | null>(null)
   const [overId, setOverId] = useState<string | null>(null)
-
   async function load() {
     try {
       setData(await getCategories())
@@ -272,6 +285,28 @@ export default function AdminCategoriesPage() {
           </DialogHeader>
 
           <div className="space-y-4">
+            <div>
+              <Label>Añadir desde una página</Label>
+              <select
+                className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                value=""
+                onChange={(e) => {
+                  const preset = PAGE_PRESETS.find((p) => p.url === e.target.value)
+                  if (preset) setForm({ ...form, name: preset.name, url: preset.url, is_collection: false })
+                }}
+              >
+                <option value="">Selecciona una página para rellenar…</option>
+                {PAGE_PRESETS.map((p) => (
+                  <option key={p.url} value={p.url}>
+                    {p.label} → {p.url}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Rellena el nombre y el enlace automáticamente. Luego puedes moverlo en el orden de la lista.
+              </p>
+            </div>
+
             <div>
               <Label htmlFor="cat_name">Nombre *</Label>
               <Input

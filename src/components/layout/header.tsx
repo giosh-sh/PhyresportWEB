@@ -12,7 +12,6 @@ import type { Category } from "@/types/product";
 const STATIC_LINKS = [
   { href: "/", label: "Inicio" },
   { href: "/cursos", label: "Cursos" },
-  { href: "/citas", label: "Citas" },
   { href: "/tienda", label: "Tienda" },
   { href: "/contacto", label: "Contacto" },
 ];
