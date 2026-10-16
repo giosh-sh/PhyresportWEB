@@ -219,10 +219,16 @@ export function CitasDashboard({
     const { active, over } = event;
     if (!over) return;
     const data = over.data.current as { professionalId?: string; startISO?: string } | undefined;
-    if (!data?.professionalId || !data.startISO) return;
+    if (!data?.startISO) return;
     const appt = appointments.find((a) => a.id === active.id);
     if (!appt) return;
-    if (appt.professional_id === data.professionalId && appt.start_at === data.startISO) return;
+    // En la semana el destino no cambia de profesional (solo la hora); en el día sí.
+    const professionalId = data.professionalId ?? appt.professional_id;
+    if (!professionalId) {
+      toast.error("Asigna un profesional a la cita primero.");
+      return;
+    }
+    if (appt.professional_id === professionalId && appt.start_at === data.startISO) return;
     if (!canEditAppointment(appt)) {
       toast.error("Solo puedes mover tus propias citas.");
       return;
@@ -233,17 +239,17 @@ export function CitasDashboard({
     const durationMs = appt.service_duration * 60_000;
     const optimistic: AppointmentFull = {
       ...appt,
-      professional_id: data.professionalId,
+      professional_id: professionalId,
       professional_name:
-        professionals.find((p) => p.id === data.professionalId)?.name ?? appt.professional_name,
+        professionals.find((p) => p.id === professionalId)?.name ?? appt.professional_name,
       professional_color:
-        professionals.find((p) => p.id === data.professionalId)?.color ?? appt.professional_color,
+        professionals.find((p) => p.id === professionalId)?.color ?? appt.professional_color,
       start_at: data.startISO,
       end_at: new Date(new Date(data.startISO).getTime() + durationMs).toISOString(),
     };
     setAppointments((list) => list.map((a) => (a.id === appt.id ? optimistic : a)));
 
-    const res = await rescheduleAppointment(String(active.id), data.professionalId, data.startISO);
+    const res = await rescheduleAppointment(String(active.id), professionalId, data.startISO);
     if (res.error) {
       toast.error(res.error);
       setAppointments(previous);
@@ -392,20 +398,22 @@ export function CitasDashboard({
                   />
                 </DndContext>
               ) : view === "week" ? (
-                <WeekView
-                  cursorKey={cursorKey}
-                  professionalsById={professionalsById}
-                  appointments={visibleAppointments}
-                  timeOffs={visibleTimeOffs}
-                  onEdit={openEdit}
-                  onCreate={openCreate}
-                  onBlockClick={openBlock}
-                  defaultProfessionalId={proFilter === "all" ? null : proFilter}
-                  onPickDay={(k) => {
-                    setCursorKey(k);
-                    setView("day");
-                  }}
-                />
+                <DndContext sensors={sensors} onDragEnd={onDragEnd}>
+                  <WeekView
+                    cursorKey={cursorKey}
+                    professionalsById={professionalsById}
+                    appointments={visibleAppointments}
+                    timeOffs={visibleTimeOffs}
+                    onEdit={openEdit}
+                    onCreate={openCreate}
+                    onBlockClick={openBlock}
+                    defaultProfessionalId={proFilter === "all" ? null : proFilter}
+                    onPickDay={(k) => {
+                      setCursorKey(k);
+                      setView("day");
+                    }}
+                  />
+                </DndContext>
               ) : view === "month" ? (
                 <MonthView
                   cursorKey={cursorKey}
@@ -533,6 +541,66 @@ function DroppableSlot({
       className={`border-b border-gray-100 transition-colors ${isOver ? "bg-teal/10" : "hover:bg-ice/50"}`}
       style={{ height: ROW_HEIGHT }}
     />
+  );
+}
+
+function WeekSlot({ startISO, onCreate }: { startISO: string; onCreate: () => void }) {
+  const { setNodeRef, isOver } = useDroppable({ id: `wslot|${startISO}`, data: { startISO } });
+  return (
+    <button
+      ref={setNodeRef}
+      type="button"
+      onClick={onCreate}
+      className={`block w-full border-b border-gray-100 transition-colors ${isOver ? "bg-teal/10" : "hover:bg-teal/5"}`}
+      style={{ height: ROW_HEIGHT }}
+    />
+  );
+}
+
+function DraggableWeekChip({
+  appt,
+  top,
+  height,
+  left,
+  width,
+  proName,
+  onEdit,
+}: {
+  appt: AppointmentFull;
+  top: number;
+  height: number;
+  left: string;
+  width: string;
+  proName: string;
+  onEdit: (a: AppointmentFull) => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id: appt.id,
+    data: { appt },
+  });
+  return (
+    <button
+      ref={setNodeRef}
+      style={{
+        top,
+        height,
+        left,
+        width,
+        borderLeftColor: appt.professional_color,
+        transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
+        opacity: isDragging ? 0.6 : 1,
+        zIndex: isDragging ? 40 : 10,
+      }}
+      className="absolute cursor-grab overflow-hidden rounded border border-gray-100 border-l-4 bg-white px-1.5 py-0.5 text-left shadow-sm hover:bg-ice active:cursor-grabbing"
+      {...attributes}
+      {...listeners}
+      onClick={() => onEdit(appt)}
+    >
+      <span className="block truncate text-[10px] font-semibold text-navy">
+        {timeLabel(appt.start_at)} {appt.patient_name}
+      </span>
+      <span className="block truncate text-[10px] text-gray-400">{proName}</span>
+    </button>
   );
 }
 
@@ -809,13 +877,10 @@ function WeekView({
                     const mm = String(minutes % 60).padStart(2, "0");
                     const iso = zonedDateTimeToUtc(k, `${hh}:${mm}`).toISOString();
                     return (
-                      <button
+                      <WeekSlot
                         key={i}
-                        type="button"
-                        onClick={() => onCreate(defaultProfessionalId, iso)}
-                        aria-label={`Nueva cita el ${k} a las ${hh}:${mm}`}
-                        className="block w-full border-b border-gray-100 transition-colors hover:bg-teal/5"
-                        style={{ height: ROW_HEIGHT }}
+                        startISO={iso}
+                        onCreate={() => onCreate(defaultProfessionalId, iso)}
                       />
                     );
                   })}
@@ -830,19 +895,18 @@ function WeekView({
                   if (item.kind === "appt" && item.appt) {
                     const a = item.appt;
                     return (
-                      <button
+                      <DraggableWeekChip
                         key={item.key}
-                        onClick={() => onEdit(a)}
-                        className="absolute z-10 overflow-hidden rounded border border-gray-100 border-l-4 bg-white px-1.5 py-0.5 text-left shadow-sm hover:bg-ice"
-                        style={{ top, height, left, width, borderLeftColor: a.professional_color }}
-                      >
-                        <span className="block truncate text-[10px] font-semibold text-navy">
-                          {timeLabel(a.start_at)} {a.patient_name}
-                        </span>
-                        <span className="block truncate text-[10px] text-gray-400">
-                          {professionalsById.get(a.professional_id ?? "")?.name ?? a.professional_name}
-                        </span>
-                      </button>
+                        appt={a}
+                        top={top}
+                        height={height}
+                        left={left}
+                        width={width}
+                        proName={
+                          professionalsById.get(a.professional_id ?? "")?.name ?? a.professional_name
+                        }
+                        onEdit={onEdit}
+                      />
                     );
                   }
 
