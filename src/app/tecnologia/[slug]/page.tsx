@@ -62,15 +62,13 @@ export default async function MachinePage({ params }: Props) {
                   {machine.name}
                 </h1>
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 animate-fade-up-delay-3">
-                  <a
-                    href={siteConfig.whatsappHref}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <Link
+                    href="/citas"
                     className="inline-flex items-center gap-2 px-6 py-3 bg-teal text-white font-display font-semibold text-sm rounded-full hover:bg-cyan hover:-translate-y-0.5 transition-all"
                   >
                     Reservar cita
                     <ArrowRight className="w-4 h-4" aria-hidden />
-                  </a>
+                  </Link>
                   <a
                     href={siteConfig.phoneHref}
                     className="inline-flex items-center gap-2 px-6 py-3 border border-white/30 text-white font-display font-semibold text-sm rounded-full hover:border-white hover:bg-white/10 transition-all"

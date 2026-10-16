@@ -1,6 +1,5 @@
 import Image from "next/image";
 import Link from "next/link";
-import { siteConfig } from "@/lib/data";
 import { ArrowRight } from "lucide-react";
 import { createPublicClient } from "@/lib/supabase/public";
 import { hexToRgba } from "@/lib/utils";
@@ -121,15 +120,13 @@ export async function HeroSection() {
             </p>
 
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-12 animate-fade-up-delay-4">
-              <a
-                href={siteConfig.whatsappBookingHref}
-                target="_blank"
-                rel="noopener noreferrer"
+              <Link
+                href="/citas"
                 className="inline-flex items-center gap-2 px-7 py-3.5 bg-teal text-white font-display font-semibold text-[15px] rounded-full shadow-[0_4px_24px_rgba(0,184,212,0.3)] hover:bg-cyan hover:-translate-y-0.5 hover:shadow-[0_8px_32px_rgba(0,184,212,0.4)] transition-all"
               >
                 Reservar valoración
                 <ArrowRight className="w-[18px] h-[18px]" />
-              </a>
+              </Link>
               <Link
                 href="/servicios/fisioterapia"
                 className="inline-flex items-center gap-2 px-7 py-3.5 border border-white/30 text-white font-display font-semibold text-[15px] rounded-full hover:border-white hover:bg-white/8 transition-all"
