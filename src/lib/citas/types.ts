@@ -73,6 +73,9 @@ export interface TimeOff {
   recurrence_interval: number;
   recurrence_weekdays: number[];
   recurrence_until: string | null;
+  /** Fechas base de la serie (para editar la serie desde una ocurrencia expandida). */
+  base_start_at?: string;
+  base_end_at?: string;
 }
 
 export type RecurrenceFreq = "none" | "daily" | "weekly" | "monthly";

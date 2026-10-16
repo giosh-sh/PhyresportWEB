@@ -35,6 +35,7 @@ import { getAppointmentsBetween, getTimeOffBetween, rescheduleAppointment } from
 import { AppointmentDialog } from "./AppointmentDialog";
 import { AvailabilityManager } from "./AvailabilityManager";
 import { ConfigManager } from "./ConfigManager";
+import { TimeOffDialog } from "./TimeOffDialog";
 
 type ViewMode = "day" | "week" | "month" | "agenda";
 
@@ -113,6 +114,7 @@ export function CitasDashboard({
   const [cursorKey, setCursorKey] = useState(dateKey(new Date()));
   const [proFilter, setProFilter] = useState<string>(currentProfessionalId || "all");
   const [resourceView, setResourceView] = useState(true);
+  const [showTeamBlocks, setShowTeamBlocks] = useState(true);
   const [appointments, setAppointments] = useState<AppointmentFull[]>([]);
   const [timeOffs, setTimeOffs] = useState<TimeOff[]>([]);
   const [loading, setLoading] = useState(false);
@@ -120,6 +122,8 @@ export function CitasDashboard({
   const [editing, setEditing] = useState<AppointmentFull | null>(null);
   const [defaultPro, setDefaultPro] = useState<string | null>(null);
   const [defaultStart, setDefaultStart] = useState<string | null>(null);
+  const [blockDialogOpen, setBlockDialogOpen] = useState(false);
+  const [editingBlock, setEditingBlock] = useState<TimeOff | null>(null);
 
   const professionalsById = useMemo(() => {
     const map = new Map<string, Professional>();
@@ -175,9 +179,20 @@ export function CitasDashboard({
   }, [appointments, proFilter]);
 
   const visibleTimeOffs = useMemo(() => {
-    if (proFilter === "all") return timeOffs;
-    return timeOffs.filter((t) => !t.professional_id || t.professional_id === proFilter);
-  }, [timeOffs, proFilter]);
+    return timeOffs.filter((t) => {
+      if (proFilter !== "all" && t.professional_id && t.professional_id !== proFilter) return false;
+      if (isAdmin) return true;
+      if (!t.professional_id) return true; // bloqueo de todo el centro
+      if (t.professional_id === currentProfessionalId) return true;
+      return showTeamBlocks; // bloqueos de compañeros (solo lectura)
+    });
+  }, [timeOffs, proFilter, isAdmin, currentProfessionalId, showTeamBlocks]);
+
+  const canEditAppointment = (a: AppointmentFull) =>
+    isAdmin || (!!currentProfessionalId && a.professional_id === currentProfessionalId);
+
+  const canEditBlock = (t: TimeOff) =>
+    isAdmin || (!!currentProfessionalId && t.professional_id === currentProfessionalId);
 
   function openCreate(professionalId?: string | null, startISO?: string | null) {
     setEditing(null);
@@ -186,8 +201,16 @@ export function CitasDashboard({
     setDialogOpen(true);
   }
   function openEdit(appt: AppointmentFull) {
+    if (!canEditAppointment(appt)) {
+      toast.info("Solo puedes gestionar tus propias citas.");
+      return;
+    }
     setEditing(appt);
     setDialogOpen(true);
+  }
+  function openBlock(t: TimeOff) {
+    setEditingBlock(t);
+    setBlockDialogOpen(true);
   }
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
@@ -200,14 +223,33 @@ export function CitasDashboard({
     const appt = appointments.find((a) => a.id === active.id);
     if (!appt) return;
     if (appt.professional_id === data.professionalId && appt.start_at === data.startISO) return;
+    if (!canEditAppointment(appt)) {
+      toast.error("Solo puedes mover tus propias citas.");
+      return;
+    }
+
+    // Actualización optimista: mueve la cita al instante, sin recargar.
+    const previous = appointments;
+    const durationMs = appt.service_duration * 60_000;
+    const optimistic: AppointmentFull = {
+      ...appt,
+      professional_id: data.professionalId,
+      professional_name:
+        professionals.find((p) => p.id === data.professionalId)?.name ?? appt.professional_name,
+      professional_color:
+        professionals.find((p) => p.id === data.professionalId)?.color ?? appt.professional_color,
+      start_at: data.startISO,
+      end_at: new Date(new Date(data.startISO).getTime() + durationMs).toISOString(),
+    };
+    setAppointments((list) => list.map((a) => (a.id === appt.id ? optimistic : a)));
 
     const res = await rescheduleAppointment(String(active.id), data.professionalId, data.startISO);
     if (res.error) {
       toast.error(res.error);
+      setAppointments(previous);
       return;
     }
     toast.success("Cita reprogramada");
-    load();
   }
 
   function shift(delta: number) {
@@ -314,6 +356,20 @@ export function CitasDashboard({
                     <Columns3 className="h-4 w-4" /> Recursos
                   </button>
                 )}
+
+                {!isAdmin && (
+                  <label
+                    className="inline-flex items-center gap-1.5 rounded-md border border-gray-200 px-3 py-1.5 text-sm text-gray-600"
+                    title="Ver los huecos bloqueados por tus compañeros (solo lectura)"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={showTeamBlocks}
+                      onChange={(e) => setShowTeamBlocks(e.target.checked)}
+                    />
+                    Ver bloqueos del equipo
+                  </label>
+                )}
               </div>
             </div>
 
@@ -332,6 +388,7 @@ export function CitasDashboard({
                     professionalsById={professionalsById}
                     onEdit={openEdit}
                     onCreate={openCreate}
+                    onBlockClick={openBlock}
                   />
                 </DndContext>
               ) : view === "week" ? (
@@ -342,6 +399,7 @@ export function CitasDashboard({
                   timeOffs={visibleTimeOffs}
                   onEdit={openEdit}
                   onCreate={openCreate}
+                  onBlockClick={openBlock}
                   defaultProfessionalId={proFilter === "all" ? null : proFilter}
                   onPickDay={(k) => {
                     setCursorKey(k);
@@ -352,8 +410,11 @@ export function CitasDashboard({
                 <MonthView
                   cursorKey={cursorKey}
                   appointments={visibleAppointments}
+                  timeOffs={visibleTimeOffs}
+                  professionalsById={professionalsById}
                   onEdit={openEdit}
                   onCreate={openCreate}
+                  onBlockClick={openBlock}
                   defaultProfessionalId={proFilter === "all" ? null : proFilter}
                   onPickDay={(k) => {
                     setCursorKey(k);
@@ -364,7 +425,9 @@ export function CitasDashboard({
                 <AgendaView
                   professionalsById={professionalsById}
                   appointments={visibleAppointments}
+                  timeOffs={visibleTimeOffs}
                   onEdit={openEdit}
+                  onBlockClick={openBlock}
                 />
               )}
             </div>
@@ -394,6 +457,15 @@ export function CitasDashboard({
         appointment={editing}
         defaultProfessionalId={defaultPro}
         defaultStartISO={defaultStart}
+      />
+
+      <TimeOffDialog
+        open={blockDialogOpen}
+        onClose={() => setBlockDialogOpen(false)}
+        onSaved={load}
+        timeOff={editingBlock}
+        professionals={professionals}
+        canEdit={editingBlock ? canEditBlock(editingBlock) : false}
       />
     </div>
   );
@@ -471,6 +543,7 @@ function TimeOffBlock({
   height,
   lane,
   lanes,
+  onClick,
 }: {
   timeOff: TimeOff;
   professionalsById: Map<string, Professional>;
@@ -478,6 +551,7 @@ function TimeOffBlock({
   height: number;
   lane?: number;
   lanes?: number;
+  onClick?: () => void;
 }) {
   const name = timeOff.professional_id
     ? professionalsById.get(timeOff.professional_id)?.name ?? "Profesional"
@@ -486,7 +560,12 @@ function TimeOffBlock({
   const width = lanes ? `${100 / lanes}%` : "100%";
   return (
     <div
-      className="absolute z-0 overflow-hidden rounded border border-dashed border-red-300 bg-red-100/80 px-1.5 py-0.5"
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onClick={onClick}
+      className={`absolute z-0 overflow-hidden rounded border border-dashed border-red-300 bg-red-100/80 px-1.5 py-0.5 ${
+        onClick ? "cursor-pointer hover:bg-red-200" : ""
+      }`}
       style={{ top, height, left, width }}
       title={`${name}${timeOff.reason ? ` · ${timeOff.reason}` : ""}`}
     >
@@ -506,6 +585,7 @@ function DayView({
   professionalsById,
   onEdit,
   onCreate,
+  onBlockClick,
 }: {
   cursorKey: string;
   professionals: Professional[];
@@ -514,6 +594,7 @@ function DayView({
   professionalsById: Map<string, Professional>;
   onEdit: (a: AppointmentFull) => void;
   onCreate: (professionalId?: string | null, startISO?: string | null) => void;
+  onBlockClick: (t: TimeOff) => void;
 }) {
   const columns = pros.length === 0 ? [null] : pros;
 
@@ -590,6 +671,7 @@ function DayView({
                       professionalsById={professionalsById}
                       top={top}
                       height={height}
+                      onClick={() => onBlockClick(t)}
                     />
                   );
                 })}
@@ -622,6 +704,7 @@ function WeekView({
   timeOffs,
   onEdit,
   onCreate,
+  onBlockClick,
   defaultProfessionalId,
   onPickDay,
 }: {
@@ -631,6 +714,7 @@ function WeekView({
   timeOffs: TimeOff[];
   onEdit: (a: AppointmentFull) => void;
   onCreate: (professionalId?: string | null, startISO?: string | null) => void;
+  onBlockClick: (t: TimeOff) => void;
   defaultProfessionalId: string | null;
   onPickDay: (key: string) => void;
 }) {
@@ -771,6 +855,7 @@ function WeekView({
                       height={height}
                       lane={item.lane}
                       lanes={item.lanes}
+                      onClick={() => onBlockClick(item.off!)}
                     />
                   );
                 })}
@@ -788,15 +873,21 @@ function WeekView({
 function MonthView({
   cursorKey,
   appointments,
+  timeOffs,
+  professionalsById,
   onEdit,
   onCreate,
+  onBlockClick,
   defaultProfessionalId,
   onPickDay,
 }: {
   cursorKey: string;
   appointments: AppointmentFull[];
+  timeOffs: TimeOff[];
+  professionalsById: Map<string, Professional>;
   onEdit: (a: AppointmentFull) => void;
   onCreate: (professionalId?: string | null, startISO?: string | null) => void;
+  onBlockClick: (t: TimeOff) => void;
   defaultProfessionalId: string | null;
   onPickDay: (key: string) => void;
 }) {
@@ -819,6 +910,9 @@ function MonthView({
           const dayAppts = appointments
             .filter((a) => formatInTimeZone(new Date(a.start_at), CLINIC_TZ, "yyyy-MM-dd") === k)
             .sort((a, b) => a.start_at.localeCompare(b.start_at));
+          const dayOffs = timeOffs.filter(
+            (t) => formatInTimeZone(new Date(t.start_at), CLINIC_TZ, "yyyy-MM-dd") === k
+          );
           return (
             <div
               key={k}
@@ -854,6 +948,20 @@ function MonthView({
                 {dayAppts.length > 3 && (
                   <span className="block px-1 text-[10px] text-gray-400">+{dayAppts.length - 3} más</span>
                 )}
+                {dayOffs.slice(0, 2).map((t, i) => (
+                  <button
+                    key={`${t.id}-${i}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onBlockClick(t);
+                    }}
+                    className="block w-full truncate rounded bg-red-100 px-1 text-left text-[10px] font-medium text-red-600 line-through hover:bg-red-200"
+                  >
+                    {t.professional_id
+                      ? professionalsById.get(t.professional_id)?.name ?? "Bloqueo"
+                      : "Todo el centro"}
+                  </button>
+                ))}
               </div>
             </div>
           );
@@ -868,25 +976,37 @@ function MonthView({
 function AgendaView({
   professionalsById,
   appointments,
+  timeOffs,
   onEdit,
+  onBlockClick,
 }: {
   professionalsById: Map<string, Professional>;
   appointments: AppointmentFull[];
+  timeOffs: TimeOff[];
   onEdit: (a: AppointmentFull) => void;
+  onBlockClick: (t: TimeOff) => void;
 }) {
   const groups = useMemo(() => {
-    const map = new Map<string, AppointmentFull[]>();
+    const map = new Map<
+      string,
+      { start: string; kind: "appt" | "off"; appt?: AppointmentFull; off?: TimeOff }[]
+    >();
     for (const a of appointments) {
       const key = formatInTimeZone(new Date(a.start_at), CLINIC_TZ, "yyyy-MM-dd");
       if (!map.has(key)) map.set(key, []);
-      map.get(key)!.push(a);
+      map.get(key)!.push({ start: a.start_at, kind: "appt", appt: a });
     }
-    for (const list of map.values()) list.sort((a, b) => a.start_at.localeCompare(b.start_at));
+    for (const t of timeOffs) {
+      const key = formatInTimeZone(new Date(t.start_at), CLINIC_TZ, "yyyy-MM-dd");
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push({ start: t.start_at, kind: "off", off: t });
+    }
+    for (const list of map.values()) list.sort((a, b) => a.start.localeCompare(b.start));
     return Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0]));
-  }, [appointments]);
+  }, [appointments, timeOffs]);
 
   if (groups.length === 0) {
-    return <p className="py-16 text-center text-gray-400">No hay citas en este periodo.</p>;
+    return <p className="py-16 text-center text-gray-400">No hay citas ni bloqueos en este periodo.</p>;
   }
 
   return (
@@ -897,27 +1017,57 @@ function AgendaView({
             {timeLabel(rangeStartISO(key), "EEEE d 'de' MMMM")}
           </h3>
           <div className="space-y-1.5">
-            {list.map((a) => (
-              <button
-                key={a.id}
-                onClick={() => onEdit(a)}
-                className="flex w-full items-center gap-3 rounded-lg border border-gray-100 border-l-4 bg-white px-3 py-2 text-left shadow-sm hover:bg-ice"
-                style={{ borderLeftColor: a.professional_color }}
-              >
-                <span className="w-12 shrink-0 font-mono text-sm text-navy">{timeLabel(a.start_at)}</span>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-medium text-navy">{a.patient_name}</span>
-                  <span className="block truncate text-xs text-gray-500">
-                    {a.service_name} · {professionalsById.get(a.professional_id ?? "")?.name ?? a.professional_name}
-                  </span>
-                </span>
-                <span
-                  className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-medium ${APPOINTMENT_STATUS_COLORS[a.status]}`}
+            {list.map((item, idx) => {
+              if (item.kind === "appt" && item.appt) {
+                const a = item.appt;
+                return (
+                  <button
+                    key={`a-${a.id}`}
+                    onClick={() => onEdit(a)}
+                    className="flex w-full items-center gap-3 rounded-lg border border-gray-100 border-l-4 bg-white px-3 py-2 text-left shadow-sm hover:bg-ice"
+                    style={{ borderLeftColor: a.professional_color }}
+                  >
+                    <span className="w-12 shrink-0 font-mono text-sm text-navy">{timeLabel(a.start_at)}</span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-medium text-navy">{a.patient_name}</span>
+                      <span className="block truncate text-xs text-gray-500">
+                        {a.service_name} ·{" "}
+                        {professionalsById.get(a.professional_id ?? "")?.name ?? a.professional_name}
+                      </span>
+                    </span>
+                    <span
+                      className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-medium ${APPOINTMENT_STATUS_COLORS[a.status]}`}
+                    >
+                      {APPOINTMENT_STATUS_LABELS[a.status]}
+                    </span>
+                  </button>
+                );
+              }
+              const t = item.off!;
+              const name = t.professional_id
+                ? professionalsById.get(t.professional_id)?.name ?? "Profesional"
+                : "Todo el centro";
+              return (
+                <button
+                  key={`off-${t.id}-${idx}`}
+                  onClick={() => onBlockClick(t)}
+                  className="flex w-full items-center gap-3 rounded-lg border border-dashed border-red-300 bg-red-100/80 px-3 py-2 text-left hover:bg-red-200"
                 >
-                  {APPOINTMENT_STATUS_LABELS[a.status]}
-                </span>
-              </button>
-            ))}
+                  <span className="w-12 shrink-0 font-mono text-sm text-red-500 line-through">
+                    {timeLabel(t.start_at)}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-medium text-red-600 line-through">{name}</span>
+                    <span className="block truncate text-xs text-red-500 line-through">
+                      {t.reason || "Bloqueo de agenda"}
+                    </span>
+                  </span>
+                  <span className="shrink-0 rounded-full border border-red-300 bg-red-100 px-2 py-0.5 text-[10px] font-medium text-red-600">
+                    Bloqueo
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </div>
       ))}

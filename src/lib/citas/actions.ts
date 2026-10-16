@@ -51,6 +51,21 @@ async function professionalForUser(userId: string): Promise<{ id: string } | nul
   return (data as { id: string }) ?? null;
 }
 
+/** Un admin gestiona cualquier cita; un fisio solo las suyas. */
+async function canManageAppointment(userId: string, appointmentId: string): Promise<boolean> {
+  const role = await getUserRole(userId);
+  if (role === "admin") return true;
+  const pro = await professionalForUser(userId);
+  if (!pro) return false;
+  const supabase = createAdminClient();
+  const { data } = await supabase
+    .from("appointments")
+    .select("professional_id")
+    .eq("id", appointmentId)
+    .maybeSingle();
+  return (data as { professional_id: string | null } | null)?.professional_id === pro.id;
+}
+
 /** Bloqueos (incluidas las recurrencias) que caen dentro del rango. */
 async function loadTimeOffOccurrences(startISO: string, endISO: string): Promise<TimeOff[]> {
   const supabase = createAdminClient();
@@ -62,13 +77,15 @@ async function loadTimeOffOccurrences(startISO: string, endISO: string): Promise
   for (const s of series) {
     if ((s.recurrence ?? "none") === "none") {
       if (new Date(s.end_at).getTime() > startMs && new Date(s.start_at).getTime() < endMs) {
-        out.push(s);
+        out.push({ ...s, base_start_at: s.start_at, base_end_at: s.end_at });
       }
       continue;
     }
     for (const iv of expandTimeOff(s, startMs, endMs)) {
       out.push({
         ...s,
+        base_start_at: s.start_at,
+        base_end_at: s.end_at,
         start_at: new Date(iv.start).toISOString(),
         end_at: new Date(iv.end).toISOString(),
       });
@@ -199,7 +216,15 @@ export async function createManualAppointment(
   } catch {
     return { error: "Unauthorized" };
   }
-  if (!input.professionalId) return { error: "Selecciona un profesional." };
+  // Un fisio solo puede crear citas en su propia agenda; un admin, en cualquiera.
+  const role = await getUserRole(userId);
+  let professionalId = input.professionalId;
+  if (role !== "admin") {
+    const pro = await professionalForUser(userId);
+    if (!pro) return { error: "Tu usuario no está vinculado a ningún profesional." };
+    professionalId = pro.id;
+  }
+  if (!professionalId) return { error: "Selecciona un profesional." };
   if (!input.serviceId) return { error: "Selecciona un servicio." };
   if (!input.patientName?.trim()) return { error: "El nombre del paciente es obligatorio." };
 
@@ -212,7 +237,7 @@ export async function createManualAppointment(
   const duration = service?.duration_minutes ?? 60;
 
   const { data, error } = await supabase.rpc("create_appointment", {
-    p_professional_id: input.professionalId,
+    p_professional_id: professionalId,
     p_service_id: input.serviceId,
     p_start_at: input.startISO,
     p_duration_minutes: duration,
@@ -240,10 +265,14 @@ export async function updateAppointmentStatus(
   id: string,
   status: AppointmentStatus
 ): Promise<{ success?: boolean; error?: string }> {
+  let userId: string;
   try {
-    await requireStaff();
+    userId = await requireStaff();
   } catch {
     return { error: "Unauthorized" };
+  }
+  if (!(await canManageAppointment(userId, id))) {
+    return { error: "Solo puedes gestionar tus propias citas." };
   }
   const supabase = createAdminClient();
   const { error } = await supabase
@@ -259,10 +288,14 @@ export async function updateAppointmentDetails(
   id: string,
   fields: Partial<Pick<AppointmentInput, "patientName" | "patientEmail" | "patientPhone" | "notes" | "serviceId">>
 ): Promise<{ success?: boolean; error?: string }> {
+  let userId: string;
   try {
-    await requireStaff();
+    userId = await requireStaff();
   } catch {
     return { error: "Unauthorized" };
+  }
+  if (!(await canManageAppointment(userId, id))) {
+    return { error: "Solo puedes gestionar tus propias citas." };
   }
   const update: Record<string, unknown> = { updated_at: new Date().toISOString() };
   if (fields.patientName !== undefined) update.patient_name = fields.patientName.trim();
@@ -282,10 +315,14 @@ export async function rescheduleAppointment(
   professionalId: string,
   startISO: string
 ): Promise<{ success?: boolean; error?: string }> {
+  let userId: string;
   try {
-    await requireStaff();
+    userId = await requireStaff();
   } catch {
     return { error: "Unauthorized" };
+  }
+  if (!(await canManageAppointment(userId, id))) {
+    return { error: "Solo puedes mover tus propias citas." };
   }
   const supabase = createAdminClient();
   const { data: appt } = await supabase
@@ -311,13 +348,69 @@ export async function rescheduleAppointment(
 }
 
 export async function deleteAppointment(id: string): Promise<{ success?: boolean; error?: string }> {
+  let userId: string;
   try {
-    await requireStaff();
+    userId = await requireStaff();
   } catch {
     return { error: "Unauthorized" };
   }
+  if (!(await canManageAppointment(userId, id))) {
+    return { error: "Solo puedes eliminar tus propias citas." };
+  }
   const supabase = createAdminClient();
   const { error } = await supabase.from("appointments").delete().eq("id", id);
+  if (error) return { error: error.message };
+  revalidatePath("/gestioncitas");
+  return { success: true };
+}
+
+export async function updateTimeOff(
+  id: string,
+  input: {
+    startISO: string;
+    endISO: string;
+    allDay?: boolean;
+    reason?: string;
+    recurrence?: RecurrenceFreq;
+    recurrenceInterval?: number;
+    recurrenceWeekdays?: number[];
+    recurrenceUntil?: string | null;
+  }
+): Promise<{ success?: boolean; error?: string }> {
+  let userId: string;
+  try {
+    userId = await requireStaff();
+  } catch {
+    return { error: "Unauthorized" };
+  }
+
+  const supabase = createAdminClient();
+  const role = await getUserRole(userId);
+  if (role !== "admin") {
+    const pro = await professionalForUser(userId);
+    const { data: row } = await supabase
+      .from("time_off")
+      .select("professional_id")
+      .eq("id", id)
+      .maybeSingle();
+    if (!pro || row?.professional_id !== pro.id) {
+      return { error: "Solo puedes editar tus propios bloqueos." };
+    }
+  }
+
+  const { error } = await supabase
+    .from("time_off")
+    .update({
+      start_at: input.startISO,
+      end_at: input.endISO,
+      all_day: input.allDay ?? false,
+      reason: input.reason?.trim() || "",
+      recurrence: input.recurrence ?? "none",
+      recurrence_interval: input.recurrenceInterval ?? 1,
+      recurrence_weekdays: input.recurrenceWeekdays ?? [],
+      recurrence_until: input.recurrenceUntil || null,
+    })
+    .eq("id", id);
   if (error) return { error: error.message };
   revalidatePath("/gestioncitas");
   return { success: true };
