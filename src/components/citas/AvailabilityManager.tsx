@@ -8,7 +8,7 @@ import { es } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { CLINIC_TZ } from "@/lib/citas/slots";
+import { CLINIC_TZ, zonedDateTimeToUtc } from "@/lib/citas/slots";
 import { describeRecurrence } from "@/lib/citas/recurrence";
 import {
   RECURRENCE_OPTIONS,
@@ -39,6 +39,13 @@ interface Row {
   weekday: number;
   start_time: string;
   end_time: string;
+}
+
+/** Fecha de "repetir hasta" por defecto (3 meses). */
+function defaultUntil(): string {
+  const d = new Date();
+  d.setMonth(d.getMonth() + 3);
+  return d.toISOString().slice(0, 10);
 }
 
 export function AvailabilityManager({
@@ -122,19 +129,35 @@ export function AvailabilityManager({
       setOffFreq("weekly");
       setOffWeekdays([1, 2, 3, 4, 5]);
     }
+    // Rellena "repetir hasta" si está vacío para no bloquear el guardado.
+    setOffUntil((u) => u || defaultUntil());
   }
 
   async function handleAddTimeOff() {
-    if (!offStart || !offEnd) return toast.error("Indica inicio y fin");
-    const startISO = new Date(offStart).toISOString();
-    const endISO = new Date(offEnd).toISOString();
-    if (new Date(endISO) <= new Date(startISO)) return toast.error("El fin debe ser posterior al inicio");
+    if (!offStart) return toast.error("Indica la fecha y hora de inicio");
+
+    let startISO: string;
+    let endISO: string;
+    if (offAllDay) {
+      const day = offStart.slice(0, 10);
+      startISO = zonedDateTimeToUtc(day, "00:00").toISOString();
+      endISO = zonedDateTimeToUtc(day, "23:59").toISOString();
+    } else {
+      if (!offEnd) return toast.error("Indica fecha y hora de fin");
+      const [sd, st] = offStart.split("T");
+      const [ed, et] = offEnd.split("T");
+      startISO = zonedDateTimeToUtc(sd, st).toISOString();
+      endISO = zonedDateTimeToUtc(ed, et).toISOString();
+      if (new Date(endISO) <= new Date(startISO)) {
+        return toast.error("El fin debe ser posterior al inicio");
+      }
+    }
+
     if (offFreq === "weekly" && offWeekdays.length === 0) {
       return toast.error("Selecciona al menos un día para la repetición semanal");
     }
-    if (offFreq !== "none" && !offUntil) {
-      return toast.error("Indica hasta cuándo se repite");
-    }
+
+    const until = offFreq === "none" ? null : offUntil || defaultUntil();
 
     const res = await addTimeOff({
       professionalId: offPro || null,
@@ -145,7 +168,7 @@ export function AvailabilityManager({
       recurrence: offFreq,
       recurrenceInterval: 1,
       recurrenceWeekdays: offFreq === "weekly" ? offWeekdays : [],
-      recurrenceUntil: offFreq !== "none" ? offUntil : null,
+      recurrenceUntil: until,
     });
     if (res.error) return toast.error(res.error);
     toast.success("Bloqueo añadido");
@@ -364,7 +387,7 @@ export function AvailabilityManager({
 
             {offFreq !== "none" && (
               <div className="mt-2">
-                <Label className="text-xs">Repetir hasta</Label>
+                <Label className="text-xs">Repetir hasta (opcional)</Label>
                 <Input type="date" value={offUntil} onChange={(e) => setOffUntil(e.target.value)} className="mt-1 h-9" />
               </div>
             )}

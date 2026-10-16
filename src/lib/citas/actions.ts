@@ -475,18 +475,34 @@ export async function addTimeOff(input: {
   }
 
   const supabase = createAdminClient();
+  const recurrence = input.recurrence ?? "none";
+  const until =
+    input.recurrenceUntil ||
+    (recurrence !== "none"
+      ? new Date(new Date().setMonth(new Date().getMonth() + 6)).toISOString().slice(0, 10)
+      : null);
+
   const { error } = await supabase.from("time_off").insert({
     professional_id: professionalId,
     start_at: input.startISO,
     end_at: input.endISO,
     all_day: input.allDay ?? false,
     reason: input.reason?.trim() || "",
-    recurrence: input.recurrence ?? "none",
+    recurrence,
     recurrence_interval: input.recurrenceInterval ?? 1,
     recurrence_weekdays: input.recurrenceWeekdays ?? [],
-    recurrence_until: input.recurrenceUntil || null,
+    recurrence_until: until,
   });
-  if (error) return { error: error.message };
+  if (error) {
+    const msg = error.message || "";
+    if (/recurrence/i.test(msg) && /column|schema|exist/i.test(msg)) {
+      return {
+        error:
+          "Falta la migración de recurrencia en la base de datos. Ejecuta supabase/phyresport-appointments.sql.",
+      };
+    }
+    return { error: msg };
+  }
   revalidatePath("/gestioncitas");
   return { success: true };
 }
