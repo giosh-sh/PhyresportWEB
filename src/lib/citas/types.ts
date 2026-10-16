@@ -36,6 +36,7 @@ export interface Professional {
   slug: string | null;
   color: string;
   specialty: string | null;
+  cubicle: string;
   active: boolean;
   bookable: boolean;
   sort_order: number;
@@ -110,6 +111,7 @@ export interface Appointment {
   end_at: string;
   status: AppointmentStatus;
   source: "web" | "manual";
+  cubicle: string;
   user_id: string | null;
   created_by: string | null;
   created_at: string;
@@ -135,3 +137,6 @@ export interface Slot {
 
 /** Valor especial para "cualquier profesional disponible". */
 export const ANY_PROFESSIONAL = "any";
+
+/** Cubículos del centro (se pueden ampliar desde Configuración). */
+export const CUBICLES = ["Atlas", "Axis", "C3", "C4", "C5", "C6", "C7", "GYM"] as const;

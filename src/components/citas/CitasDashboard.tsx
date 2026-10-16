@@ -517,7 +517,10 @@ function DraggableAppointment({
       <span className="block truncate text-[11px] font-semibold text-navy">
         {timeLabel(appt.start_at)} {appt.patient_name}
       </span>
-      <span className="block truncate text-[10px] text-gray-500">{appt.service_name}</span>
+      <span className="block truncate text-[10px] text-gray-500">
+        {appt.service_name}
+        {appt.cubicle ? ` · ${appt.cubicle}` : ""}
+      </span>
     </div>
   );
 }
@@ -600,7 +603,10 @@ function DraggableWeekChip({
       <span className="block truncate text-[10px] font-semibold text-navy">
         {timeLabel(appt.start_at)} {appt.patient_name}
       </span>
-      <span className="block truncate text-[10px] text-gray-400">{proName}</span>
+      <span className="block truncate text-[10px] text-gray-400">
+        {proName}
+        {appt.cubicle ? ` · ${appt.cubicle}` : ""}
+      </span>
     </button>
   );
 }

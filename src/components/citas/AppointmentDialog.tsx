@@ -18,6 +18,7 @@ import { formatInTimeZone } from "date-fns-tz";
 import { zonedDateTimeToUtc, CLINIC_TZ } from "@/lib/citas/slots";
 import {
   APPOINTMENT_STATUS_OPTIONS,
+  CUBICLES,
   type AppointmentFull,
   type AppointmentStatus,
   type BookingService,
@@ -79,16 +80,24 @@ export function AppointmentDialog({
   const [phone, setPhone] = useState("");
   const [notes, setNotes] = useState("");
   const [status, setStatus] = useState<AppointmentStatus>("confirmada");
+  const [cubicle, setCubicle] = useState("");
+  const [conflict, setConflict] = useState<{ message: string; suggestions: string[] } | null>(null);
   const [saving, setSaving] = useState(false);
+
+  const professionalCubicle = (proId: string) =>
+    professionals.find((p) => p.id === proId)?.cubicle ?? "";
 
   useEffect(() => {
     if (!open) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- sincroniza el formulario al abrir
+    setConflict(null);
     if (appointment) {
       const { date: d, time: t } = splitISO(appointment.start_at);
       const end = formatInTimeZone(new Date(appointment.end_at), CLINIC_TZ, "HH:mm");
       // eslint-disable-next-line react-hooks/set-state-in-effect -- sincroniza el formulario al abrir
       setServiceId(appointment.service_id ?? services[0]?.id ?? "");
       setProfessionalId(appointment.professional_id ?? professionals[0]?.id ?? "");
+      setCubicle(appointment.cubicle || professionalCubicle(appointment.professional_id ?? ""));
       setDate(d);
       setTime(t);
       setEndTime(end);
@@ -100,8 +109,10 @@ export function AppointmentDialog({
     } else {
       const start = defaultStartISO ? splitISO(defaultStartISO) : { date: "", time: "10:00" };
       const dur = services[0]?.duration_minutes ?? 60;
+      const proId = defaultProfessionalId ?? professionals[0]?.id ?? "";
       setServiceId(services[0]?.id ?? "");
-      setProfessionalId(defaultProfessionalId ?? professionals[0]?.id ?? "");
+      setProfessionalId(proId);
+      setCubicle(professionalCubicle(proId));
       setDate(start.date || formatInTimeZone(new Date(), CLINIC_TZ, "yyyy-MM-dd"));
       setTime(start.time);
       setEndTime(minutesToTime(timeToMinutes(start.time) + dur));
@@ -111,9 +122,10 @@ export function AppointmentDialog({
       setNotes("");
       setStatus("confirmada");
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, appointment, defaultProfessionalId, defaultStartISO, professionals, services]);
 
-  async function handleSave() {
+  async function handleSave(allowConflict = false) {
     if (!name.trim()) return toast.error("El nombre es obligatorio");
     if (!date || !time) return toast.error("Indica fecha y hora");
     const duration = timeToMinutes(endTime) - timeToMinutes(time);
@@ -121,7 +133,14 @@ export function AppointmentDialog({
     const startISO = zonedDateTimeToUtc(date, time).toISOString();
     setSaving(true);
 
-    let res: { success?: boolean; error?: string; id?: string };
+    let res: {
+      success?: boolean;
+      error?: string;
+      id?: string;
+      conflict?: boolean;
+      message?: string;
+      suggestions?: string[];
+    };
     if (appointment) {
       res = await updateAppointmentDetails(appointment.id, {
         patientName: name,
@@ -136,11 +155,19 @@ export function AppointmentDialog({
       const scheduleChanged =
         appointment.start_at !== startISO ||
         appointment.professional_id !== professionalId ||
-        originalDuration !== duration;
+        originalDuration !== duration ||
+        (appointment.cubicle ?? "") !== cubicle;
       if (!res.error && scheduleChanged) {
-        res = await rescheduleAppointment(appointment.id, professionalId, startISO, duration);
+        res = await rescheduleAppointment(
+          appointment.id,
+          professionalId,
+          startISO,
+          duration,
+          cubicle,
+          allowConflict
+        );
       }
-      if (!res.error && appointment.status !== status) {
+      if (!res.error && !res.conflict && appointment.status !== status) {
         res = await updateAppointmentStatus(appointment.id, status);
       }
     } else {
@@ -154,10 +181,16 @@ export function AppointmentDialog({
         notes,
         status,
         durationMinutes: duration,
+        cubicle,
+        allowConflict,
       });
     }
 
     setSaving(false);
+    if (res.conflict) {
+      setConflict({ message: res.message ?? "Conflicto de cubículo", suggestions: res.suggestions ?? [] });
+      return;
+    }
     if (res.error) {
       toast.error(res.error);
       return;
@@ -211,7 +244,10 @@ export function AppointmentDialog({
               <Label>Profesional</Label>
               <select
                 value={professionalId}
-                onChange={(e) => setProfessionalId(e.target.value)}
+                onChange={(e) => {
+                  setProfessionalId(e.target.value);
+                  setCubicle(professionalCubicle(e.target.value));
+                }}
                 className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
               >
                 {professionals.map((p) => (
@@ -221,6 +257,25 @@ export function AppointmentDialog({
                 ))}
               </select>
             </div>
+          </div>
+
+          <div>
+            <Label>Cubículo</Label>
+            <select
+              value={cubicle}
+              onChange={(e) => setCubicle(e.target.value)}
+              className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+            >
+              <option value="">Sin cubículo</option>
+              {CUBICLES.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+              {cubicle && !CUBICLES.includes(cubicle as (typeof CUBICLES)[number]) && (
+                <option value={cubicle}>{cubicle}</option>
+              )}
+            </select>
           </div>
 
           <div className="grid grid-cols-3 gap-3">
@@ -294,6 +349,55 @@ export function AppointmentDialog({
           </div>
         </div>
 
+        {conflict && (
+          <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm">
+            <p className="font-semibold text-amber-700">⚠ {conflict.message}</p>
+            {conflict.suggestions.length > 0 ? (
+              <>
+                <p className="mt-1 text-amber-700">
+                  Horas recomendadas (agenda y cubículo libres):
+                </p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {conflict.suggestions.map((s) => {
+                    const dur = timeToMinutes(endTime) - timeToMinutes(time);
+                    return (
+                      <button
+                        key={s}
+                        type="button"
+                        onClick={() => {
+                          setTime(formatInTimeZone(new Date(s), CLINIC_TZ, "HH:mm"));
+                          setEndTime(
+                            formatInTimeZone(
+                              new Date(new Date(s).getTime() + Math.max(15, dur) * 60000),
+                              CLINIC_TZ,
+                              "HH:mm"
+                            )
+                          );
+                          setConflict(null);
+                        }}
+                        className="rounded-full border border-amber-400 bg-white px-3 py-1 text-xs font-medium text-amber-700 hover:bg-amber-100"
+                      >
+                        {formatInTimeZone(new Date(s), CLINIC_TZ, "HH:mm")}
+                      </button>
+                    );
+                  })}
+                </div>
+              </>
+            ) : (
+              <p className="mt-1 text-amber-700">No hay horas libres ese día para ese cubículo.</p>
+            )}
+            <button
+              type="button"
+              onClick={() => {
+                void handleSave(true);
+              }}
+              className="mt-3 text-xs font-semibold text-amber-700 underline"
+            >
+              Guardar de todas formas
+            </button>
+          </div>
+        )}
+
         <DialogFooter className="flex-row justify-between gap-2 sm:justify-between">
           {appointment ? (
             <Button type="button" variant="ghost" className="text-destructive" onClick={handleDelete}>
@@ -306,7 +410,7 @@ export function AppointmentDialog({
             <Button type="button" variant="outline" onClick={onClose}>
               Cancelar
             </Button>
-            <Button type="button" onClick={handleSave} disabled={saving}>
+            <Button type="button" onClick={() => { void handleSave(); }} disabled={saving}>
               {saving ? "Guardando…" : appointment ? "Guardar" : "Crear cita"}
             </Button>
           </div>

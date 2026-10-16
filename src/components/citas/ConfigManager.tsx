@@ -17,6 +17,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import type { BookingService, Professional } from "@/lib/citas/types";
+import { CUBICLES } from "@/lib/citas/types";
 import {
   getBookingServices,
   getProfessionals,
@@ -40,6 +41,7 @@ export function ConfigManager() {
   const [proName, setProName] = useState("");
   const [proColor, setProColor] = useState(DEFAULT_COLOR);
   const [proSpecialty, setProSpecialty] = useState("");
+  const [proCubicle, setProCubicle] = useState("");
   const [proUserId, setProUserId] = useState("");
   const [proActive, setProActive] = useState(true);
   const [proBookable, setProBookable] = useState(true);
@@ -70,6 +72,7 @@ export function ConfigManager() {
     setProName(p?.name ?? "");
     setProColor(p?.color ?? DEFAULT_COLOR);
     setProSpecialty(p?.specialty ?? "");
+    setProCubicle(p?.cubicle ?? "");
     setProUserId(p?.user_id ?? "");
     setProActive(p?.active ?? true);
     setProBookable(p?.bookable ?? true);
@@ -84,6 +87,7 @@ export function ConfigManager() {
       name: proName,
       color: proColor,
       specialty: proSpecialty,
+      cubicle: proCubicle,
       user_id: proUserId,
       active: proActive,
       bookable: proBookable,
@@ -152,6 +156,7 @@ export function ConfigManager() {
                 <span className="block truncate text-sm font-medium text-navy">{p.name}</span>
                 <span className="block truncate text-xs text-gray-400">
                   {p.specialty || "Sin especialidad"}
+                  {p.cubicle ? ` · ${p.cubicle}` : ""}
                   {p.user_id ? " · cuenta vinculada" : ""}
                 </span>
               </div>
@@ -227,6 +232,21 @@ export function ConfigManager() {
                 <Label>Especialidad</Label>
                 <Input value={proSpecialty} onChange={(e) => setProSpecialty(e.target.value)} className="mt-1" />
               </div>
+            </div>
+            <div>
+              <Label>Cubículo</Label>
+              <Input
+                list="cubicles-list"
+                value={proCubicle}
+                onChange={(e) => setProCubicle(e.target.value)}
+                placeholder="Atlas, Axis, C3…, GYM"
+                className="mt-1"
+              />
+              <datalist id="cubicles-list">
+                {CUBICLES.map((c) => (
+                  <option key={c} value={c} />
+                ))}
+              </datalist>
             </div>
             <div>
               <Label>ID de usuario (Clerk)</Label>

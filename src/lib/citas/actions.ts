@@ -6,6 +6,7 @@ import { getUserRole, requireStaff } from "@/lib/admin-auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
   computeDaySlots,
+  dateKeyInTz,
   pickBalancedProfessional,
   zonedDateTimeToUtc,
 } from "./slots";
@@ -51,7 +52,78 @@ async function professionalForUser(userId: string): Promise<{ id: string } | nul
   return (data as { id: string }) ?? null;
 }
 
-/** Un admin gestiona cualquier cita; un fisio solo las suyas. */
+/** Hay otra cita activa en el mismo cubículo que solapa con el rango. */
+async function cubicleConflictExists(
+  cubicle: string,
+  startISO: string,
+  endISO: string,
+  excludeId?: string
+): Promise<boolean> {
+  if (!cubicle) return false;
+  const supabase = createAdminClient();
+  let q = supabase
+    .from("appointments")
+    .select("id", { count: "exact", head: true })
+    .eq("cubicle", cubicle)
+    .neq("status", "cancelada")
+    .lt("start_at", endISO)
+    .gt("end_at", startISO);
+  if (excludeId) q = q.neq("id", excludeId);
+  const { count } = await q;
+  return (count ?? 0) > 0;
+}
+
+/** Horas recomendadas dentro del horario del profesional y con el cubículo libre. */
+async function computeSuggestions(
+  professionalId: string,
+  startISO: string,
+  durationMinutes: number,
+  cubicle: string,
+  excludeId?: string
+): Promise<string[]> {
+  const supabase = createAdminClient();
+  const date = dateKeyInTz(new Date(startISO));
+  const dayStart = zonedDateTimeToUtc(date, "00:00").toISOString();
+  const dayEnd = zonedDateTimeToUtc(nextDateKey(date), "00:00").toISOString();
+
+  const [availRes, apptRes, timeOff] = await Promise.all([
+    supabase
+      .from("availability")
+      .select("*")
+      .eq("professional_id", professionalId)
+      .eq("active", true),
+    supabase
+      .from("appointments")
+      .select("id,professional_id,start_at,end_at,cubicle")
+      .neq("status", "cancelada")
+      .gte("start_at", dayStart)
+      .lt("start_at", dayEnd),
+    loadTimeOffOccurrences(dayStart, dayEnd),
+  ]);
+
+  const appts = ((apptRes.data ?? []) as any[]).filter((a) => a.id !== excludeId);
+  const slots = computeDaySlots({
+    date,
+    durationMinutes,
+    professionalIds: [professionalId],
+    availability: (availRes.data ?? []) as Availability[],
+    appointments: appts.filter((a) => a.professional_id === professionalId),
+    timeOff,
+  });
+
+  const durationMs = durationMinutes * 60_000;
+  const free = slots.filter((s) => {
+    const sMs = new Date(s.start).getTime();
+    return !appts.some(
+      (a) =>
+        cubicle &&
+        a.cubicle === cubicle &&
+        new Date(a.start_at).getTime() < sMs + durationMs &&
+        new Date(a.end_at).getTime() > sMs
+    );
+  });
+  return free.slice(0, 5).map((s) => s.start);
+}
 async function canManageAppointment(userId: string, appointmentId: string): Promise<boolean> {
   const role = await getUserRole(userId);
   if (role === "admin") return true;
@@ -206,11 +278,20 @@ export interface AppointmentInput {
   notes?: string;
   status?: AppointmentStatus;
   durationMinutes?: number;
+  cubicle?: string;
+  allowConflict?: boolean;
 }
 
 export async function createManualAppointment(
   input: AppointmentInput
-): Promise<{ success?: boolean; id?: string; error?: string }> {
+): Promise<{
+  success?: boolean;
+  id?: string;
+  error?: string;
+  conflict?: boolean;
+  message?: string;
+  suggestions?: string[];
+}> {
   let userId: string;
   try {
     userId = await requireStaff();
@@ -240,6 +321,27 @@ export async function createManualAppointment(
       ? input.durationMinutes
       : service?.duration_minutes ?? 60;
 
+  // Cubículo: el indicado o, si no, el del profesional
+  let cubicle = (input.cubicle ?? "").trim();
+  if (!cubicle) {
+    const { data: pro } = await supabase
+      .from("professionals")
+      .select("cubicle")
+      .eq("id", professionalId)
+      .maybeSingle();
+    cubicle = ((pro as any)?.cubicle ?? "").trim();
+  }
+
+  const endISO = new Date(new Date(input.startISO).getTime() + duration * 60_000).toISOString();
+  if (!input.allowConflict && cubicle && (await cubicleConflictExists(cubicle, input.startISO, endISO))) {
+    const suggestions = await computeSuggestions(professionalId, input.startISO, duration, cubicle);
+    return {
+      conflict: true,
+      message: `El cubículo ${cubicle} ya está ocupado a esa hora.`,
+      suggestions,
+    };
+  }
+
   const { data, error } = await supabase.rpc("create_appointment", {
     p_professional_id: professionalId,
     p_service_id: input.serviceId,
@@ -253,12 +355,18 @@ export async function createManualAppointment(
     p_user_id: null,
     p_created_by: userId,
     p_status: input.status ?? "confirmada",
+    p_cubicle: cubicle || null,
   });
 
   if (error) {
-    if ((error.message || "").includes("SLOT_TAKEN")) return { error: "Ese hueco ya está ocupado." };
-    if ((error.message || "").includes("SLOT_BLOCKED")) return { error: "Ese horario está bloqueado." };
-    return { error: error.message };
+    const msg = error.message || "";
+    if (msg.includes("SLOT_TAKEN")) return { error: "Ese hueco ya está ocupado." };
+    if (msg.includes("SLOT_BLOCKED")) return { error: "Ese horario está bloqueado." };
+    if (msg.includes("CUBICLE_TAKEN")) {
+      const suggestions = await computeSuggestions(professionalId, input.startISO, duration, cubicle);
+      return { conflict: true, message: `El cubículo ${cubicle} ya está ocupado a esa hora.`, suggestions };
+    }
+    return { error: msg };
   }
 
   revalidatePath("/gestioncitas");
@@ -318,8 +426,16 @@ export async function rescheduleAppointment(
   id: string,
   professionalId: string,
   startISO: string,
-  durationMinutes?: number
-): Promise<{ success?: boolean; error?: string }> {
+  durationMinutes?: number,
+  cubicleInput?: string,
+  allowConflict?: boolean
+): Promise<{
+  success?: boolean;
+  error?: string;
+  conflict?: boolean;
+  message?: string;
+  suggestions?: string[];
+}> {
   let userId: string;
   try {
     userId = await requireStaff();
@@ -332,13 +448,39 @@ export async function rescheduleAppointment(
   const supabase = createAdminClient();
 
   let duration = durationMinutes && durationMinutes > 0 ? durationMinutes : 0;
-  if (!duration) {
+  let currentCubicle = "";
+  if (!duration || !cubicleInput) {
     const { data: appt } = await supabase
       .from("appointments")
-      .select("service_id, booking_services(duration_minutes)")
+      .select("cubicle, service_id, booking_services(duration_minutes)")
       .eq("id", id)
       .maybeSingle();
-    duration = (appt as any)?.booking_services?.duration_minutes ?? 60;
+    if (!duration) duration = (appt as any)?.booking_services?.duration_minutes ?? 60;
+    currentCubicle = ((appt as any)?.cubicle ?? "").trim();
+  }
+
+  let cubicle = (cubicleInput ?? "").trim() || currentCubicle;
+  if (!cubicle) {
+    const { data: pro } = await supabase
+      .from("professionals")
+      .select("cubicle")
+      .eq("id", professionalId)
+      .maybeSingle();
+    cubicle = ((pro as any)?.cubicle ?? "").trim();
+  }
+
+  const endISO = new Date(new Date(startISO).getTime() + duration * 60_000).toISOString();
+  if (
+    !allowConflict &&
+    cubicle &&
+    (await cubicleConflictExists(cubicle, startISO, endISO, id))
+  ) {
+    const suggestions = await computeSuggestions(professionalId, startISO, duration, cubicle, id);
+    return {
+      conflict: true,
+      message: `El cubículo ${cubicle} ya está ocupado a esa hora.`,
+      suggestions,
+    };
   }
 
   const { error } = await supabase.rpc("reschedule_appointment", {
@@ -346,11 +488,17 @@ export async function rescheduleAppointment(
     p_professional_id: professionalId,
     p_start_at: startISO,
     p_duration_minutes: duration,
+    p_cubicle: cubicle || null,
   });
   if (error) {
-    if ((error.message || "").includes("SLOT_TAKEN")) return { error: "Ese hueco ya está ocupado." };
-    if ((error.message || "").includes("SLOT_BLOCKED")) return { error: "Ese horario está bloqueado." };
-    return { error: error.message };
+    const msg = error.message || "";
+    if (msg.includes("SLOT_TAKEN")) return { error: "Ese hueco ya está ocupado." };
+    if (msg.includes("SLOT_BLOCKED")) return { error: "Ese horario está bloqueado." };
+    if (msg.includes("CUBICLE_TAKEN")) {
+      const suggestions = await computeSuggestions(professionalId, startISO, duration, cubicle, id);
+      return { conflict: true, message: `El cubículo ${cubicle} ya está ocupado a esa hora.`, suggestions };
+    }
+    return { error: msg };
   }
   revalidatePath("/gestioncitas");
   return { success: true };
@@ -547,6 +695,7 @@ export async function upsertProfessional(input: {
   name: string;
   color?: string;
   specialty?: string;
+  cubicle?: string;
   user_id?: string | null;
   active?: boolean;
   bookable?: boolean;
@@ -561,6 +710,7 @@ export async function upsertProfessional(input: {
     name: input.name.trim(),
     color: input.color || "#00B8D4",
     specialty: input.specialty || "",
+    cubicle: (input.cubicle ?? "").trim(),
     user_id: input.user_id?.trim() || null,
     active: input.active ?? true,
     bookable: input.bookable ?? true,
