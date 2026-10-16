@@ -122,21 +122,36 @@ function parseTime(norm: string): { start?: string; end?: string } {
   return {};
 }
 
+function nameWords(name: string): string[] {
+  return normalize(name)
+    .replace(/[^a-z0-9 ]/g, " ")
+    .split(" ")
+    .filter((w) => w.length >= 3);
+}
+
 function parseProfessional(
   norm: string,
   professionals: Professional[]
 ): Professional | undefined {
+  const inputWords = normalize(norm)
+    .replace(/[^a-z0-9 ]/g, " ")
+    .split(" ")
+    .filter((w) => w.length >= 3);
+
   let best: Professional | undefined;
-  let bestLen = 0;
+  let bestScore = 0;
+
   for (const p of professionals) {
-    const tokens = [p.name, p.name.split(" ")[0]]
-      .map((t) => normalize(t))
-      .filter((t) => t.length >= 3);
-    for (const t of tokens) {
-      if (new RegExp(`\\b${t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`).test(norm)) {
-        if (t.length > bestLen) {
-          best = p;
-          bestLen = t.length;
+    const words = nameWords(p.name);
+    for (const pw of words) {
+      for (const iw of inputWords) {
+        // Coincidencia exacta o por prefijo (p. ej. "javi" → "javier").
+        if (pw === iw || pw.startsWith(iw) || iw.startsWith(pw)) {
+          const score = Math.min(pw.length, iw.length);
+          if (score > bestScore) {
+            bestScore = score;
+            best = p;
+          }
         }
       }
     }
