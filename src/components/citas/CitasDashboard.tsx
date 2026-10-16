@@ -341,6 +341,8 @@ export function CitasDashboard({
                   appointments={visibleAppointments}
                   timeOffs={visibleTimeOffs}
                   onEdit={openEdit}
+                  onCreate={openCreate}
+                  defaultProfessionalId={proFilter === "all" ? null : proFilter}
                   onPickDay={(k) => {
                     setCursorKey(k);
                     setView("day");
@@ -351,6 +353,8 @@ export function CitasDashboard({
                   cursorKey={cursorKey}
                   appointments={visibleAppointments}
                   onEdit={openEdit}
+                  onCreate={openCreate}
+                  defaultProfessionalId={proFilter === "all" ? null : proFilter}
                   onPickDay={(k) => {
                     setCursorKey(k);
                     setView("day");
@@ -617,6 +621,8 @@ function WeekView({
   appointments,
   timeOffs,
   onEdit,
+  onCreate,
+  defaultProfessionalId,
   onPickDay,
 }: {
   cursorKey: string;
@@ -624,6 +630,8 @@ function WeekView({
   appointments: AppointmentFull[];
   timeOffs: TimeOff[];
   onEdit: (a: AppointmentFull) => void;
+  onCreate: (professionalId?: string | null, startISO?: string | null) => void;
+  defaultProfessionalId: string | null;
   onPickDay: (key: string) => void;
 }) {
   const start = startOfWeekKey(cursorKey);
@@ -711,9 +719,22 @@ function WeekView({
             return (
               <div key={k} className="relative flex-1 border-l border-gray-100">
                 <div>
-                  {Array.from({ length: ROWS }).map((_, i) => (
-                    <div key={i} className="border-b border-gray-100" style={{ height: ROW_HEIGHT }} />
-                  ))}
+                  {Array.from({ length: ROWS }).map((_, i) => {
+                    const minutes = GRID_START_HOUR * 60 + i * ROW_MINUTES;
+                    const hh = String(Math.floor(minutes / 60)).padStart(2, "0");
+                    const mm = String(minutes % 60).padStart(2, "0");
+                    const iso = zonedDateTimeToUtc(k, `${hh}:${mm}`).toISOString();
+                    return (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => onCreate(defaultProfessionalId, iso)}
+                        aria-label={`Nueva cita el ${k} a las ${hh}:${mm}`}
+                        className="block w-full border-b border-gray-100 transition-colors hover:bg-teal/5"
+                        style={{ height: ROW_HEIGHT }}
+                      />
+                    );
+                  })}
                 </div>
 
                 {placed.map((item) => {
@@ -768,11 +789,15 @@ function MonthView({
   cursorKey,
   appointments,
   onEdit,
+  onCreate,
+  defaultProfessionalId,
   onPickDay,
 }: {
   cursorKey: string;
   appointments: AppointmentFull[];
   onEdit: (a: AppointmentFull) => void;
+  onCreate: (professionalId?: string | null, startISO?: string | null) => void;
+  defaultProfessionalId: string | null;
   onPickDay: (key: string) => void;
 }) {
   const first = `${cursorKey.slice(0, 7)}-01`;
@@ -797,12 +822,17 @@ function MonthView({
           return (
             <div
               key={k}
-              className={`min-h-[92px] border-b border-r border-gray-100 p-1 ${inMonth ? "" : "bg-gray-50/60"}`}
+              onClick={() => onCreate(defaultProfessionalId, zonedDateTimeToUtc(k, "10:00").toISOString())}
+              className={`min-h-[92px] cursor-pointer border-b border-r border-gray-100 p-1 transition-colors hover:bg-teal/5 ${inMonth ? "" : "bg-gray-50/60"}`}
             >
               <button
-                onClick={() => onPickDay(k)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onPickDay(k);
+                }}
+                title="Ver el día"
                 className={`mb-0.5 text-[11px] font-semibold ${
-                  k === today ? "flex h-5 w-5 items-center justify-center rounded-full bg-teal text-white" : "text-gray-500"
+                  k === today ? "flex h-5 w-5 items-center justify-center rounded-full bg-teal text-white" : "text-gray-500 hover:text-teal"
                 }`}
               >
                 {Number(k.slice(8, 10))}
@@ -811,7 +841,10 @@ function MonthView({
                 {dayAppts.slice(0, 3).map((a) => (
                   <button
                     key={a.id}
-                    onClick={() => onEdit(a)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEdit(a);
+                    }}
                     className="block w-full truncate rounded border-l-2 bg-ice/70 px-1 text-left text-[10px] hover:bg-ice"
                     style={{ borderLeftColor: a.professional_color }}
                   >
