@@ -614,7 +614,7 @@ export async function addTimeOff(input: {
   recurrenceInterval?: number;
   recurrenceWeekdays?: number[];
   recurrenceUntil?: string | null;
-}): Promise<{ success?: boolean; error?: string }> {
+}): Promise<{ success?: boolean; error?: string; warning?: string }> {
   let userId: string;
   try {
     userId = await requireStaff();
@@ -639,7 +639,7 @@ export async function addTimeOff(input: {
       ? new Date(new Date().setMonth(new Date().getMonth() + 6)).toISOString().slice(0, 10)
       : null);
 
-  const { error } = await supabase.from("time_off").insert({
+  const payload = {
     professional_id: professionalId,
     start_at: input.startISO,
     end_at: input.endISO,
@@ -649,7 +649,31 @@ export async function addTimeOff(input: {
     recurrence_interval: input.recurrenceInterval ?? 1,
     recurrence_weekdays: input.recurrenceWeekdays ?? [],
     recurrence_until: until,
-  });
+  };
+
+  let { error } = await supabase.from("time_off").insert(payload);
+
+  // Si faltan las columnas de recurrencia (migración sin ejecutar), reintenta
+  // sin recurrencia para no bloquear al usuario y avisa.
+  if (error && /recurrence/i.test(error.message || "") && /column|schema|exist/i.test(error.message || "")) {
+    const retry = await supabase.from("time_off").insert({
+      professional_id: professionalId,
+      start_at: input.startISO,
+      end_at: input.endISO,
+      all_day: input.allDay ?? false,
+      reason: input.reason?.trim() || "",
+    });
+    if (!retry.error) {
+      revalidatePath("/gestioncitas");
+      return {
+        success: true,
+        warning:
+          "Bloqueo creado SIN repetición: falta ejecutar la migración de recurrencia (supabase/phyresport-appointments.sql).",
+      };
+    }
+    error = retry.error;
+  }
+
   if (error) {
     const msg = error.message || "";
     if (/recurrence/i.test(msg) && /column|schema|exist/i.test(msg)) {

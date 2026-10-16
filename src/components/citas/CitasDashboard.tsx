@@ -36,6 +36,7 @@ import { AppointmentDialog } from "./AppointmentDialog";
 import { AvailabilityManager } from "./AvailabilityManager";
 import { ConfigManager } from "./ConfigManager";
 import { TimeOffDialog } from "./TimeOffDialog";
+import { QuickAddBar } from "./QuickAddBar";
 
 type ViewMode = "day" | "week" | "month" | "agenda";
 
@@ -301,6 +302,11 @@ export function CitasDashboard({
         </TabsList>
 
         <TabsContent value="agenda" className="mt-4">
+          <QuickAddBar
+            professionals={professionals}
+            services={services.filter((s) => s.active)}
+            onCreated={load}
+          />
           <div className="rounded-2xl border border-gray-100 bg-white shadow-sm">
             {/* Toolbar */}
             <div className="flex flex-wrap items-center gap-2 border-b border-gray-100 p-3">

@@ -143,13 +143,19 @@ export function AvailabilityManager({
       startISO = zonedDateTimeToUtc(day, "00:00").toISOString();
       endISO = zonedDateTimeToUtc(day, "23:59").toISOString();
     } else {
-      if (!offEnd) return toast.error("Indica fecha y hora de fin");
-      const [sd, st] = offStart.split("T");
-      const [ed, et] = offEnd.split("T");
-      startISO = zonedDateTimeToUtc(sd, st).toISOString();
-      endISO = zonedDateTimeToUtc(ed, et).toISOString();
-      if (new Date(endISO) <= new Date(startISO)) {
-        return toast.error("El fin debe ser posterior al inicio");
+      if (!offEnd) {
+        // Sin hora de fin: se asume hasta el final del día (23:59).
+        const day = offStart.slice(0, 10);
+        startISO = zonedDateTimeToUtc(offStart.split("T")[0], offStart.split("T")[1]).toISOString();
+        endISO = zonedDateTimeToUtc(day, "23:59").toISOString();
+      } else {
+        const [sd, st] = offStart.split("T");
+        const [ed, et] = offEnd.split("T");
+        startISO = zonedDateTimeToUtc(sd, st).toISOString();
+        endISO = zonedDateTimeToUtc(ed, et).toISOString();
+        if (new Date(endISO) <= new Date(startISO)) {
+          return toast.error("El fin debe ser posterior al inicio");
+        }
       }
     }
 
@@ -171,7 +177,8 @@ export function AvailabilityManager({
       recurrenceUntil: until,
     });
     if (res.error) return toast.error(res.error);
-    toast.success("Bloqueo añadido");
+    if (res.warning) toast.warning(res.warning);
+    else toast.success("Bloqueo añadido");
     setOffStart("");
     setOffEnd("");
     setOffReason("");
