@@ -73,6 +73,22 @@ async function cubicleConflictExists(
   return (count ?? 0) > 0;
 }
 
+/** Días de cierre del centro (por defecto: sábado y domingo). */
+async function readClosedWeekdays(): Promise<number[]> {
+  try {
+    const supabase = createAdminClient();
+    const { data } = await supabase
+      .from("settings")
+      .select("value")
+      .eq("key", "clinic")
+      .maybeSingle();
+    const value = (data?.value ?? {}) as { closed_weekdays?: number[] };
+    return Array.isArray(value.closed_weekdays) ? value.closed_weekdays : [0, 6];
+  } catch {
+    return [0, 6];
+  }
+}
+
 /** Horas recomendadas dentro del horario del profesional y con el cubículo libre. */
 async function computeSuggestions(
   professionalId: string,
@@ -109,6 +125,7 @@ async function computeSuggestions(
     availability: (availRes.data ?? []) as Availability[],
     appointments: appts.filter((a) => a.professional_id === professionalId),
     timeOff,
+    closedWeekdays: await readClosedWeekdays(),
   });
 
   const durationMs = durationMinutes * 60_000;
@@ -661,9 +678,13 @@ export async function addTimeOff(input: {
 
   let { error } = await supabase.from("time_off").insert(payload);
 
+  const isSchemaError = (m?: string) =>
+    !!m && /(column|schema|pgrst|does not exist|find the)/i.test(m);
+
   // Si faltan las columnas de recurrencia (migración sin ejecutar), reintenta
   // sin recurrencia para no bloquear al usuario y avisa.
-  if (error && /recurrence/i.test(error.message || "") && /column|schema|exist/i.test(error.message || "")) {
+  if (error && isSchemaError(error.message)) {
+    console.error("[citas] time_off recurrence insert falló:", error.message, (error as any).code);
     const retry = await supabase.from("time_off").insert({
       professional_id: professionalId,
       start_at: input.startISO,
@@ -676,21 +697,16 @@ export async function addTimeOff(input: {
       return {
         success: true,
         warning:
-          "Bloqueo creado SIN repetición: falta ejecutar la migración de recurrencia (supabase/phyresport-appointments.sql).",
+          "Bloqueo creado SIN repetición. Para que se repita, ejecuta supabase/phyresport-appointments.sql.",
       };
     }
+    console.error("[citas] time_off insert mínimo falló:", retry.error.message, (retry.error as any).code);
     error = retry.error;
   }
 
   if (error) {
-    const msg = error.message || "";
-    if (/recurrence/i.test(msg) && /column|schema|exist/i.test(msg)) {
-      return {
-        error:
-          "Falta la migración de recurrencia en la base de datos. Ejecuta supabase/phyresport-appointments.sql.",
-      };
-    }
-    return { error: msg };
+    console.error("[citas] time_off insert error:", error.message, (error as any).code);
+    return { error: error.message || "No se pudo crear el bloqueo." };
   }
   revalidatePath("/gestioncitas");
   return { success: true };
@@ -798,6 +814,37 @@ export async function upsertBookingService(input: {
    Público (/citas)
    ============================================================ */
 
+export async function getClinicSettings(): Promise<{ closedWeekdays: number[] }> {
+  try {
+    await requireStaff();
+  } catch {
+    return { closedWeekdays: [0, 6] };
+  }
+  return { closedWeekdays: await readClosedWeekdays() };
+}
+
+export async function saveClinicSettings(
+  closedWeekdays: number[]
+): Promise<{ success?: boolean; error?: string }> {
+  let userId: string;
+  try {
+    userId = await requireStaff();
+  } catch {
+    return { error: "Unauthorized" };
+  }
+  const role = await getUserRole(userId);
+  if (role !== "admin") {
+    return { error: "Solo un admin puede cambiar los días de cierre." };
+  }
+  const supabase = createAdminClient();
+  const { error } = await supabase
+    .from("settings")
+    .upsert({ key: "clinic", value: { closed_weekdays: closedWeekdays } }, { onConflict: "key" });
+  if (error) return { error: error.message };
+  revalidatePath("/gestioncitas");
+  return { success: true };
+}
+
 export async function getPublicBookingData(): Promise<{
   services: BookingService[];
   professionals: Professional[];
@@ -876,6 +923,7 @@ export async function getAvailableSlots(
     availability: (availRes.data ?? []) as Availability[],
     appointments: (apptRes.data ?? []) as { professional_id: string | null; start_at: string; end_at: string }[],
     timeOff,
+    closedWeekdays: await readClosedWeekdays(),
   });
 }
 
@@ -1029,6 +1077,7 @@ async function getAvailableSlotsForStart(
     availability: (availRes.data ?? []) as Availability[],
     appointments: (apptRes.data ?? []) as { professional_id: string | null; start_at: string; end_at: string }[],
     timeOff,
+    closedWeekdays: await readClosedWeekdays(),
   });
 
   const slot = slots.find((s) => s.start === startISO);

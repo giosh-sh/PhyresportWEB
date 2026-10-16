@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Clock, Pencil, Plus, UserRound } from "lucide-react";
+import { CalendarOff, Clock, Pencil, Plus, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,12 +20,25 @@ import type { BookingService, Professional } from "@/lib/citas/types";
 import { CUBICLES } from "@/lib/citas/types";
 import {
   getBookingServices,
+  getClinicSettings,
   getProfessionals,
+  saveClinicSettings,
   upsertBookingService,
   upsertProfessional,
 } from "@/lib/citas/actions";
 
 const DEFAULT_COLOR = "#00B8D4";
+
+const WEEKDAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
+const WEEKDAY_LABELS: Record<number, string> = {
+  0: "Dom",
+  1: "Lun",
+  2: "Mar",
+  3: "Mié",
+  4: "Jue",
+  5: "Vie",
+  6: "Sáb",
+};
 
 export function ConfigManager() {
   const router = useRouter();
@@ -53,12 +66,19 @@ export function ConfigManager() {
   const [svcColor, setSvcColor] = useState(DEFAULT_COLOR);
   const [svcDescription, setSvcDescription] = useState("");
   const [svcActive, setSvcActive] = useState(true);
+  const [closedWeekdays, setClosedWeekdays] = useState<number[]>([0, 6]);
+  const [savingClosed, setSavingClosed] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
-    const [pros, svcs] = await Promise.all([getProfessionals(true), getBookingServices(true)]);
+    const [pros, svcs, clinic] = await Promise.all([
+      getProfessionals(true),
+      getBookingServices(true),
+      getClinicSettings(),
+    ]);
     setProfessionals(pros);
     setServices(svcs);
+    setClosedWeekdays(clinic.closedWeekdays);
     setLoading(false);
   }, []);
 
@@ -132,6 +152,19 @@ export function ConfigManager() {
     router.refresh();
   }
 
+  function toggleClosed(day: number) {
+    setClosedWeekdays((w) => (w.includes(day) ? w.filter((d) => d !== day) : [...w, day]));
+  }
+
+  async function saveClosed() {
+    setSavingClosed(true);
+    const res = await saveClinicSettings(closedWeekdays);
+    setSavingClosed(false);
+    if (res.error) return toast.error(res.error);
+    toast.success("Días de cierre guardados");
+    router.refresh();
+  }
+
   if (loading) {
     return <div className="py-16 text-center text-gray-400">Cargando configuración…</div>;
   }
@@ -201,6 +234,35 @@ export function ConfigManager() {
             </div>
           ))}
         </div>
+      </div>
+
+      {/* Días de cierre del centro */}
+      <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm lg:col-span-2">
+        <h2 className="mb-1 flex items-center gap-2 font-display text-lg font-bold text-navy">
+          <CalendarOff className="h-5 w-5 text-teal" /> Días de cierre del centro
+        </h2>
+        <p className="mb-3 text-sm text-gray-500">
+          Estos días no se ofrecerán en la reserva online. Por defecto, sábado y domingo.
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {WEEKDAY_ORDER.map((day) => (
+            <button
+              key={day}
+              type="button"
+              onClick={() => toggleClosed(day)}
+              className={`h-9 w-14 rounded-md border text-sm font-medium ${
+                closedWeekdays.includes(day)
+                  ? "border-red-300 bg-red-100 text-red-600"
+                  : "border-gray-200 text-gray-600 hover:border-teal/50"
+              }`}
+            >
+              {WEEKDAY_LABELS[day]}
+            </button>
+          ))}
+        </div>
+        <Button className="mt-3" onClick={saveClosed} disabled={savingClosed}>
+          {savingClosed ? "Guardando…" : "Guardar días de cierre"}
+        </Button>
       </div>
 
       {/* Dialog profesional */}

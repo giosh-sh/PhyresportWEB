@@ -64,6 +64,8 @@ export function computeDaySlots(params: {
   appointments: { professional_id: string | null; start_at: string; end_at: string }[];
   timeOff: TimeOff[];
   stepMinutes?: number;
+  /** Días de la semana (0=domingo) en que el centro está cerrado. */
+  closedWeekdays?: number[];
 }): Slot[] {
   const {
     date,
@@ -73,9 +75,14 @@ export function computeDaySlots(params: {
     appointments,
     timeOff,
     stepMinutes = SLOT_STEP_MINUTES,
+    closedWeekdays,
   } = params;
 
   const weekday = weekdayOf(date);
+
+  // Centro cerrado ese día (p. ej. fines de semana)
+  if (closedWeekdays && closedWeekdays.includes(weekday)) return [];
+
   const stepMs = stepMinutes * 60_000;
   const durationMs = durationMinutes * 60_000;
 
