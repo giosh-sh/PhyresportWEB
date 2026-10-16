@@ -247,3 +247,9 @@ WHERE NOT EXISTS (
 INSERT INTO categories (name, slug, parent_id, description, url, is_collection, sort_order)
 VALUES ('Citas', 'citas', NULL, 'Reserva de citas online', '/citas', false, 5)
 ON CONFLICT (slug) DO NOTHING;
+
+-- 13. RECURRENCIA DE BLOQUEOS (estilo Google Calendar)
+ALTER TABLE time_off ADD COLUMN IF NOT EXISTS recurrence TEXT NOT NULL DEFAULT 'none';
+ALTER TABLE time_off ADD COLUMN IF NOT EXISTS recurrence_interval INTEGER NOT NULL DEFAULT 1;
+ALTER TABLE time_off ADD COLUMN IF NOT EXISTS recurrence_weekdays INTEGER[] DEFAULT '{}';
+ALTER TABLE time_off ADD COLUMN IF NOT EXISTS recurrence_until DATE;

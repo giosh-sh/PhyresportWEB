@@ -2,13 +2,14 @@
 
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
-import { requireStaff } from "@/lib/admin-auth";
+import { getUserRole, requireStaff } from "@/lib/admin-auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
   computeDaySlots,
   pickBalancedProfessional,
   zonedDateTimeToUtc,
 } from "./slots";
+import { expandTimeOff } from "./recurrence";
 import {
   ANY_PROFESSIONAL,
   type AppointmentFull,
@@ -16,6 +17,7 @@ import {
   type Availability,
   type BookingService,
   type Professional,
+  type RecurrenceFreq,
   type Slot,
   type TimeOff,
 } from "./types";
@@ -37,6 +39,42 @@ function mapAppointment(row: any): AppointmentFull {
     service_name: row.booking_services?.name ?? "Servicio",
     service_duration: row.booking_services?.duration_minutes ?? 60,
   };
+}
+
+async function professionalForUser(userId: string): Promise<{ id: string } | null> {
+  const supabase = createAdminClient();
+  const { data } = await supabase
+    .from("professionals")
+    .select("id")
+    .eq("user_id", userId)
+    .maybeSingle();
+  return (data as { id: string }) ?? null;
+}
+
+/** Bloqueos (incluidas las recurrencias) que caen dentro del rango. */
+async function loadTimeOffOccurrences(startISO: string, endISO: string): Promise<TimeOff[]> {
+  const supabase = createAdminClient();
+  const { data } = await supabase.from("time_off").select("*");
+  const series = (data ?? []) as TimeOff[];
+  const startMs = new Date(startISO).getTime();
+  const endMs = new Date(endISO).getTime();
+  const out: TimeOff[] = [];
+  for (const s of series) {
+    if ((s.recurrence ?? "none") === "none") {
+      if (new Date(s.end_at).getTime() > startMs && new Date(s.start_at).getTime() < endMs) {
+        out.push(s);
+      }
+      continue;
+    }
+    for (const iv of expandTimeOff(s, startMs, endMs)) {
+      out.push({
+        ...s,
+        start_at: new Date(iv.start).toISOString(),
+        end_at: new Date(iv.end).toISOString(),
+      });
+    }
+  }
+  return out.sort((a, b) => a.start_at.localeCompare(b.start_at));
 }
 
 /* ============================================================
@@ -110,13 +148,22 @@ export async function getTimeOffBetween(startISO: string, endISO: string): Promi
   } catch {
     return [];
   }
+  return loadTimeOffOccurrences(startISO, endISO);
+}
+
+/** Series de bloqueo sin expandir (para el panel de disponibilidad). */
+export async function getTimeOffSeries(): Promise<TimeOff[]> {
+  try {
+    await requireStaff();
+  } catch {
+    return [];
+  }
   const supabase = createAdminClient();
   const { data } = await supabase
     .from("time_off")
     .select("*")
-    .gte("end_at", startISO)
-    .lte("start_at", endISO)
-    .order("start_at", { ascending: true });
+    .order("start_at", { ascending: false })
+    .limit(500);
   return (data ?? []) as TimeOff[];
 }
 
@@ -313,19 +360,38 @@ export async function addTimeOff(input: {
   endISO: string;
   allDay?: boolean;
   reason?: string;
+  recurrence?: RecurrenceFreq;
+  recurrenceInterval?: number;
+  recurrenceWeekdays?: number[];
+  recurrenceUntil?: string | null;
 }): Promise<{ success?: boolean; error?: string }> {
+  let userId: string;
   try {
-    await requireStaff();
+    userId = await requireStaff();
   } catch {
     return { error: "Unauthorized" };
   }
+
+  const role = await getUserRole(userId);
+  let professionalId = input.professionalId;
+  if (role !== "admin") {
+    // Un fisio solo puede bloquear su propia agenda.
+    const pro = await professionalForUser(userId);
+    if (!pro) return { error: "Tu usuario no está vinculado a ningún profesional." };
+    professionalId = pro.id;
+  }
+
   const supabase = createAdminClient();
   const { error } = await supabase.from("time_off").insert({
-    professional_id: input.professionalId,
+    professional_id: professionalId,
     start_at: input.startISO,
     end_at: input.endISO,
     all_day: input.allDay ?? false,
     reason: input.reason?.trim() || "",
+    recurrence: input.recurrence ?? "none",
+    recurrence_interval: input.recurrenceInterval ?? 1,
+    recurrence_weekdays: input.recurrenceWeekdays ?? [],
+    recurrence_until: input.recurrenceUntil || null,
   });
   if (error) return { error: error.message };
   revalidatePath("/gestioncitas");
@@ -333,12 +399,25 @@ export async function addTimeOff(input: {
 }
 
 export async function deleteTimeOff(id: string): Promise<{ success?: boolean; error?: string }> {
+  let userId: string;
   try {
-    await requireStaff();
+    userId = await requireStaff();
   } catch {
     return { error: "Unauthorized" };
   }
+
   const supabase = createAdminClient();
+  const role = await getUserRole(userId);
+  if (role !== "admin") {
+    const pro = await professionalForUser(userId);
+    const { data: row } = await supabase
+      .from("time_off")
+      .select("professional_id")
+      .eq("id", id)
+      .maybeSingle();
+    if (!pro || row?.professional_id !== pro.id) return { error: "No autorizado" };
+  }
+
   const { error } = await supabase.from("time_off").delete().eq("id", id);
   if (error) return { error: error.message };
   revalidatePath("/gestioncitas");
@@ -474,7 +553,7 @@ export async function getAvailableSlots(
   const dayStart = zonedDateTimeToUtc(date, "00:00").toISOString();
   const dayEnd = zonedDateTimeToUtc(nextDateKey(date), "00:00").toISOString();
 
-  const [availRes, apptRes, offRes] = await Promise.all([
+  const [availRes, apptRes, timeOff] = await Promise.all([
     supabase
       .from("availability")
       .select("*")
@@ -487,11 +566,7 @@ export async function getAvailableSlots(
       .neq("status", "cancelada")
       .gte("start_at", dayStart)
       .lt("start_at", dayEnd),
-    supabase
-      .from("time_off")
-      .select("*")
-      .gte("end_at", dayStart)
-      .lte("start_at", dayEnd),
+    loadTimeOffOccurrences(dayStart, dayEnd),
   ]);
 
   return computeDaySlots({
@@ -500,7 +575,7 @@ export async function getAvailableSlots(
     professionalIds,
     availability: (availRes.data ?? []) as Availability[],
     appointments: (apptRes.data ?? []) as { professional_id: string | null; start_at: string; end_at: string }[],
-    timeOff: (offRes.data ?? []) as TimeOff[],
+    timeOff,
   });
 }
 
@@ -635,7 +710,7 @@ async function getAvailableSlotsForStart(
   const dayStart = zonedDateTimeToUtc(date, "00:00").toISOString();
   const dayEnd = zonedDateTimeToUtc(nextDateKey(date), "00:00").toISOString();
 
-  const [availRes, apptRes, offRes] = await Promise.all([
+  const [availRes, apptRes, timeOff] = await Promise.all([
     supabase.from("availability").select("*").in("professional_id", professionalIds).eq("active", true),
     supabase
       .from("appointments")
@@ -644,7 +719,7 @@ async function getAvailableSlotsForStart(
       .neq("status", "cancelada")
       .gte("start_at", dayStart)
       .lt("start_at", dayEnd),
-    supabase.from("time_off").select("*").gte("end_at", dayStart).lte("start_at", dayEnd),
+    loadTimeOffOccurrences(dayStart, dayEnd),
   ]);
 
   const slots = computeDaySlots({
@@ -653,7 +728,7 @@ async function getAvailableSlotsForStart(
     professionalIds,
     availability: (availRes.data ?? []) as Availability[],
     appointments: (apptRes.data ?? []) as { professional_id: string | null; start_at: string; end_at: string }[],
-    timeOff: (offRes.data ?? []) as TimeOff[],
+    timeOff,
   });
 
   const slot = slots.find((s) => s.start === startISO);

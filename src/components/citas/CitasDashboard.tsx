@@ -29,8 +29,9 @@ import {
   type AppointmentFull,
   type BookingService,
   type Professional,
+  type TimeOff,
 } from "@/lib/citas/types";
-import { getAppointmentsBetween, rescheduleAppointment } from "@/lib/citas/actions";
+import { getAppointmentsBetween, getTimeOffBetween, rescheduleAppointment } from "@/lib/citas/actions";
 import { AppointmentDialog } from "./AppointmentDialog";
 import { AvailabilityManager } from "./AvailabilityManager";
 import { ConfigManager } from "./ConfigManager";
@@ -65,6 +66,37 @@ function timeLabel(iso: string, fmt = "HH:mm"): string {
   return formatInTimeZone(new Date(iso), CLINIC_TZ, fmt, { locale: es });
 }
 
+/** Minutos desde medianoche (en la zona del centro), limitados a la rejilla visible. */
+function minutesOfDay(iso: string): number {
+  const m = Number(timeLabel(iso, "H")) * 60 + Number(timeLabel(iso, "m"));
+  return m;
+}
+function clampGridMinute(m: number): number {
+  return Math.min(GRID_END_HOUR * 60, Math.max(GRID_START_HOUR * 60, m));
+}
+
+interface LaneInput {
+  start: number;
+  end: number;
+}
+/** Coloca elementos solapados en carriles para no taparse. */
+function layoutLanes<T extends LaneInput>(items: T[]): (T & { lane: number; lanes: number })[] {
+  const sorted = [...items].sort((a, b) => a.start - b.start || a.end - b.end);
+  const laneEnds: number[] = [];
+  const placed = sorted.map((it) => {
+    let lane = laneEnds.findIndex((end) => end <= it.start);
+    if (lane === -1) {
+      lane = laneEnds.length;
+      laneEnds.push(it.end);
+    } else {
+      laneEnds[lane] = it.end;
+    }
+    return { ...it, lane };
+  });
+  const lanes = Math.max(1, laneEnds.length);
+  return placed.map((p) => ({ ...p, lanes }));
+}
+
 export function CitasDashboard({
   professionals,
   services,
@@ -82,6 +114,7 @@ export function CitasDashboard({
   const [proFilter, setProFilter] = useState<string>(currentProfessionalId || "all");
   const [resourceView, setResourceView] = useState(true);
   const [appointments, setAppointments] = useState<AppointmentFull[]>([]);
+  const [timeOffs, setTimeOffs] = useState<TimeOff[]>([]);
   const [loading, setLoading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<AppointmentFull | null>(null);
@@ -113,9 +146,15 @@ export function CitasDashboard({
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      setAppointments(await getAppointmentsBetween(range.start, range.end));
+      const [appts, offs] = await Promise.all([
+        getAppointmentsBetween(range.start, range.end),
+        getTimeOffBetween(range.start, range.end),
+      ]);
+      setAppointments(appts);
+      setTimeOffs(offs);
     } catch {
       setAppointments([]);
+      setTimeOffs([]);
     }
     setLoading(false);
   }, [range.start, range.end]);
@@ -134,6 +173,11 @@ export function CitasDashboard({
     if (proFilter === "all") return appointments;
     return appointments.filter((a) => a.professional_id === proFilter);
   }, [appointments, proFilter]);
+
+  const visibleTimeOffs = useMemo(() => {
+    if (proFilter === "all") return timeOffs;
+    return timeOffs.filter((t) => !t.professional_id || t.professional_id === proFilter);
+  }, [timeOffs, proFilter]);
 
   function openCreate(professionalId?: string | null, startISO?: string | null) {
     setEditing(null);
@@ -284,6 +328,8 @@ export function CitasDashboard({
                     cursorKey={cursorKey}
                     professionals={visibleProfessionals}
                     appointments={visibleAppointments}
+                    timeOffs={visibleTimeOffs}
+                    professionalsById={professionalsById}
                     onEdit={openEdit}
                     onCreate={openCreate}
                   />
@@ -293,6 +339,7 @@ export function CitasDashboard({
                   cursorKey={cursorKey}
                   professionalsById={professionalsById}
                   appointments={visibleAppointments}
+                  timeOffs={visibleTimeOffs}
                   onEdit={openEdit}
                   onPickDay={(k) => {
                     setCursorKey(k);
@@ -413,16 +460,54 @@ function DroppableSlot({
   );
 }
 
+function TimeOffBlock({
+  timeOff,
+  professionalsById,
+  top,
+  height,
+  lane,
+  lanes,
+}: {
+  timeOff: TimeOff;
+  professionalsById: Map<string, Professional>;
+  top: number;
+  height: number;
+  lane?: number;
+  lanes?: number;
+}) {
+  const name = timeOff.professional_id
+    ? professionalsById.get(timeOff.professional_id)?.name ?? "Profesional"
+    : "Todo el centro";
+  const left = lane != null && lanes ? `${(lane * 100) / lanes}%` : "0%";
+  const width = lanes ? `${100 / lanes}%` : "100%";
+  return (
+    <div
+      className="absolute z-0 overflow-hidden rounded border border-dashed border-red-300 bg-red-100/80 px-1.5 py-0.5"
+      style={{ top, height, left, width }}
+      title={`${name}${timeOff.reason ? ` · ${timeOff.reason}` : ""}`}
+    >
+      <span className="block truncate text-[10px] font-semibold text-red-600 line-through">{name}</span>
+      {timeOff.reason && (
+        <span className="block truncate text-[10px] text-red-500 line-through">{timeOff.reason}</span>
+      )}
+    </div>
+  );
+}
+
 function DayView({
   cursorKey,
   professionals: pros,
   appointments,
+  timeOffs,
+  professionalsById,
   onEdit,
   onCreate,
 }: {
   cursorKey: string;
   professionals: Professional[];
   appointments: AppointmentFull[];
+  timeOffs: TimeOff[];
+  professionalsById: Map<string, Professional>;
   onEdit: (a: AppointmentFull) => void;
   onCreate: (professionalId?: string | null, startISO?: string | null) => void;
 }) {
@@ -465,6 +550,9 @@ function DayView({
 
           {columns.map((pro) => {
             const colAppts = appointments.filter((a) => a.professional_id === pro?.id);
+            const colOffs = timeOffs.filter(
+              (t) => !t.professional_id || t.professional_id === pro?.id
+            );
             return (
               <div key={pro?.id ?? "none"} className="relative flex-1 border-l border-gray-100">
                 {/* slots */}
@@ -484,13 +572,30 @@ function DayView({
                     );
                   })}
                 </div>
+                {/* bloqueos (horas restringidas) */}
+                {colOffs.map((t, i) => {
+                  const start = clampGridMinute(minutesOfDay(t.start_at));
+                  const rawEnd = minutesOfDay(t.end_at);
+                  const end = clampGridMinute(rawEnd > start ? rawEnd : start + 30);
+                  const top = ((start - GRID_START_HOUR * 60) / ROW_MINUTES) * ROW_HEIGHT;
+                  const height = Math.max(24, ((end - start) / ROW_MINUTES) * ROW_HEIGHT - 2);
+                  return (
+                    <TimeOffBlock
+                      key={`${t.id}-${i}`}
+                      timeOff={t}
+                      professionalsById={professionalsById}
+                      top={top}
+                      height={height}
+                    />
+                  );
+                })}
                 {/* appointments */}
                 {colAppts.map((a) => {
-                  const mins = Number(timeLabel(a.start_at, "H")) * 60 + Number(timeLabel(a.start_at, "m"));
+                  const mins = minutesOfDay(a.start_at);
                   const top = ((mins - GRID_START_HOUR * 60) / ROW_MINUTES) * ROW_HEIGHT;
                   const height = Math.max(28, (a.service_duration / ROW_MINUTES) * ROW_HEIGHT - 2);
                   return (
-                    <div key={a.id} className="absolute inset-x-0" style={{ top, height }}>
+                    <div key={a.id} className="absolute inset-x-0 z-10" style={{ top, height }}>
                       <DraggableAppointment appt={a} color={a.professional_color} onEdit={onEdit} />
                     </div>
                   );
@@ -510,12 +615,14 @@ function WeekView({
   cursorKey,
   professionalsById,
   appointments,
+  timeOffs,
   onEdit,
   onPickDay,
 }: {
   cursorKey: string;
   professionalsById: Map<string, Professional>;
   appointments: AppointmentFull[];
+  timeOffs: TimeOff[];
   onEdit: (a: AppointmentFull) => void;
   onPickDay: (key: string) => void;
 }) {
@@ -524,42 +631,133 @@ function WeekView({
   const today = dateKey(new Date());
 
   return (
-    <div className="grid grid-cols-1 gap-2 sm:grid-cols-7">
-      {days.map((k) => {
-        const dayAppts = appointments
-          .filter((a) => formatInTimeZone(new Date(a.start_at), CLINIC_TZ, "yyyy-MM-dd") === k)
-          .sort((a, b) => a.start_at.localeCompare(b.start_at));
-        return (
-          <div key={k} className={`rounded-lg border ${k === today ? "border-teal/50 bg-teal/5" : "border-gray-100"}`}>
+    <div className="overflow-x-auto">
+      <div className="min-w-[860px]">
+        {/* Header: días en horizontal */}
+        <div className="flex">
+          <div className="w-14 shrink-0" />
+          {days.map((k) => (
             <button
+              key={k}
               onClick={() => onPickDay(k)}
-              className="w-full border-b border-gray-100 px-2 py-1.5 text-left text-xs font-medium capitalize text-navy hover:text-teal"
+              className={`flex-1 border-l border-gray-100 py-2 text-center hover:bg-ice ${k === today ? "bg-teal/5" : ""}`}
             >
-              {timeLabel(rangeStartISO(k), "EEE d")}
+              <span className="block text-[11px] uppercase text-gray-400">
+                {timeLabel(rangeStartISO(k), "EEE")}
+              </span>
+              <span
+                className={`mx-auto mt-0.5 flex h-6 w-6 items-center justify-center rounded-full text-sm font-semibold ${
+                  k === today ? "bg-teal text-white" : "text-navy"
+                }`}
+              >
+                {Number(k.slice(8, 10))}
+              </span>
             </button>
-            <div className="space-y-1 p-1.5">
-              {dayAppts.length === 0 ? (
-                <p className="py-2 text-center text-[11px] text-gray-300">—</p>
+          ))}
+        </div>
+
+        {/* Grid: horas en vertical, días en horizontal */}
+        <div className="flex">
+          <div className="w-14 shrink-0">
+            {Array.from({ length: ROWS }).map((_, i) =>
+              i % 2 === 0 ? (
+                <div key={i} className="pr-1 text-right text-[11px] text-gray-400" style={{ height: ROW_HEIGHT }}>
+                  {`${GRID_START_HOUR + i / 2}`.padStart(2, "0")}:00
+                </div>
               ) : (
-                dayAppts.map((a) => (
-                  <button
-                    key={a.id}
-                    onClick={() => onEdit(a)}
-                    className="block w-full rounded border-l-4 bg-white px-1.5 py-1 text-left text-[11px] shadow-sm hover:bg-ice"
-                    style={{ borderLeftColor: a.professional_color }}
-                  >
-                    <span className="block font-semibold text-navy">{timeLabel(a.start_at)}</span>
-                    <span className="block truncate text-gray-600">{a.patient_name}</span>
-                    <span className="block truncate text-gray-400">
-                      {professionalsById.get(a.professional_id ?? "")?.name ?? a.professional_name}
-                    </span>
-                  </button>
-                ))
-              )}
-            </div>
+                <div key={i} style={{ height: ROW_HEIGHT }} />
+              )
+            )}
           </div>
-        );
-      })}
+
+          {days.map((k) => {
+            const dayAppts = appointments.filter(
+              (a) => formatInTimeZone(new Date(a.start_at), CLINIC_TZ, "yyyy-MM-dd") === k
+            );
+            const dayOffs = timeOffs.filter(
+              (t) => formatInTimeZone(new Date(t.start_at), CLINIC_TZ, "yyyy-MM-dd") === k
+            );
+
+            type Item = {
+              key: string;
+              start: number;
+              end: number;
+              kind: "appt" | "off";
+              appt?: AppointmentFull;
+              off?: TimeOff;
+            };
+            const items: Item[] = [
+              ...dayAppts.map((a) => ({
+                key: `a-${a.id}`,
+                start: clampGridMinute(minutesOfDay(a.start_at)),
+                end: clampGridMinute(minutesOfDay(a.start_at) + a.service_duration),
+                kind: "appt" as const,
+                appt: a,
+              })),
+              ...dayOffs.map((t, i) => {
+                const s = clampGridMinute(minutesOfDay(t.start_at));
+                const rawEnd = minutesOfDay(t.end_at);
+                return {
+                  key: `o-${t.id}-${i}`,
+                  start: s,
+                  end: clampGridMinute(rawEnd > s ? rawEnd : s + 30),
+                  kind: "off" as const,
+                  off: t,
+                };
+              }),
+            ];
+            const placed = layoutLanes(items);
+
+            return (
+              <div key={k} className="relative flex-1 border-l border-gray-100">
+                <div>
+                  {Array.from({ length: ROWS }).map((_, i) => (
+                    <div key={i} className="border-b border-gray-100" style={{ height: ROW_HEIGHT }} />
+                  ))}
+                </div>
+
+                {placed.map((item) => {
+                  const top = ((item.start - GRID_START_HOUR * 60) / ROW_MINUTES) * ROW_HEIGHT;
+                  const height = Math.max(22, ((item.end - item.start) / ROW_MINUTES) * ROW_HEIGHT - 2);
+                  const left = `${(item.lane * 100) / item.lanes}%`;
+                  const width = `${100 / item.lanes}%`;
+
+                  if (item.kind === "appt" && item.appt) {
+                    const a = item.appt;
+                    return (
+                      <button
+                        key={item.key}
+                        onClick={() => onEdit(a)}
+                        className="absolute z-10 overflow-hidden rounded border border-gray-100 border-l-4 bg-white px-1.5 py-0.5 text-left shadow-sm hover:bg-ice"
+                        style={{ top, height, left, width, borderLeftColor: a.professional_color }}
+                      >
+                        <span className="block truncate text-[10px] font-semibold text-navy">
+                          {timeLabel(a.start_at)} {a.patient_name}
+                        </span>
+                        <span className="block truncate text-[10px] text-gray-400">
+                          {professionalsById.get(a.professional_id ?? "")?.name ?? a.professional_name}
+                        </span>
+                      </button>
+                    );
+                  }
+
+                  return (
+                    <TimeOffBlock
+                      key={item.key}
+                      timeOff={item.off!}
+                      professionalsById={professionalsById}
+                      top={top}
+                      height={height}
+                      lane={item.lane}
+                      lanes={item.lanes}
+                    />
+                  );
+                })}
+              </div>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }

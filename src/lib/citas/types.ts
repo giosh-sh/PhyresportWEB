@@ -69,7 +69,31 @@ export interface TimeOff {
   end_at: string;
   all_day: boolean;
   reason: string | null;
+  recurrence: RecurrenceFreq;
+  recurrence_interval: number;
+  recurrence_weekdays: number[];
+  recurrence_until: string | null;
 }
+
+export type RecurrenceFreq = "none" | "daily" | "weekly" | "monthly";
+
+export const RECURRENCE_OPTIONS: { value: RecurrenceFreq; label: string }[] = [
+  { value: "none", label: "No se repite" },
+  { value: "daily", label: "Diariamente" },
+  { value: "weekly", label: "Semanalmente" },
+  { value: "monthly", label: "Mensualmente" },
+];
+
+export const WEEKDAY_SHORT = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+export const WEEKDAY_LONG = [
+  "Domingo",
+  "Lunes",
+  "Martes",
+  "Miércoles",
+  "Jueves",
+  "Viernes",
+  "Sábado",
+];
 
 export interface Appointment {
   id: string;

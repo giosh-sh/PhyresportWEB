@@ -2,19 +2,26 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { CalendarOff, Loader2, Plus, Save, Trash2 } from "lucide-react";
+import { CalendarOff, Loader2, Plus, Repeat, Save, Trash2 } from "lucide-react";
 import { formatInTimeZone } from "date-fns-tz";
 import { es } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CLINIC_TZ } from "@/lib/citas/slots";
-import type { Professional, TimeOff } from "@/lib/citas/types";
+import { describeRecurrence } from "@/lib/citas/recurrence";
+import {
+  RECURRENCE_OPTIONS,
+  WEEKDAY_SHORT,
+  type Professional,
+  type RecurrenceFreq,
+  type TimeOff,
+} from "@/lib/citas/types";
 import {
   addTimeOff,
   deleteTimeOff,
   getAvailability,
-  getTimeOffBetween,
+  getTimeOffSeries,
   saveAvailability,
 } from "@/lib/citas/actions";
 
@@ -52,7 +59,11 @@ export function AvailabilityManager({
   const [offPro, setOffPro] = useState<string>(lockedProfessionalId || "");
   const [offStart, setOffStart] = useState("");
   const [offEnd, setOffEnd] = useState("");
+  const [offAllDay, setOffAllDay] = useState(false);
   const [offReason, setOffReason] = useState("");
+  const [offFreq, setOffFreq] = useState<RecurrenceFreq>("none");
+  const [offWeekdays, setOffWeekdays] = useState<number[]>([]);
+  const [offUntil, setOffUntil] = useState("");
 
   const loadAvailability = useCallback(async (pid: string) => {
     if (!pid) return;
@@ -65,9 +76,7 @@ export function AvailabilityManager({
   }, []);
 
   const loadTimeOff = useCallback(async () => {
-    const now = new Date().toISOString();
-    const future = new Date(Date.now() + 180 * 86400000).toISOString();
-    setTimeOff(await getTimeOffBetween(now, future));
+    setTimeOff(await getTimeOffSeries());
   }, []);
 
   useEffect(() => {
@@ -98,22 +107,55 @@ export function AvailabilityManager({
     toast.success("Horario guardado");
   }
 
+  function toggleWeekday(day: number) {
+    setOffWeekdays((w) => (w.includes(day) ? w.filter((d) => d !== day) : [...w, day]));
+  }
+
+  function applyPreset(preset: "weekend" | "weekdays" | "daily") {
+    if (preset === "daily") {
+      setOffFreq("daily");
+      setOffWeekdays([]);
+    } else if (preset === "weekend") {
+      setOffFreq("weekly");
+      setOffWeekdays([0, 6]);
+    } else {
+      setOffFreq("weekly");
+      setOffWeekdays([1, 2, 3, 4, 5]);
+    }
+  }
+
   async function handleAddTimeOff() {
     if (!offStart || !offEnd) return toast.error("Indica inicio y fin");
     const startISO = new Date(offStart).toISOString();
     const endISO = new Date(offEnd).toISOString();
     if (new Date(endISO) <= new Date(startISO)) return toast.error("El fin debe ser posterior al inicio");
+    if (offFreq === "weekly" && offWeekdays.length === 0) {
+      return toast.error("Selecciona al menos un día para la repetición semanal");
+    }
+    if (offFreq !== "none" && !offUntil) {
+      return toast.error("Indica hasta cuándo se repite");
+    }
+
     const res = await addTimeOff({
       professionalId: offPro || null,
       startISO,
       endISO,
+      allDay: offAllDay,
       reason: offReason,
+      recurrence: offFreq,
+      recurrenceInterval: 1,
+      recurrenceWeekdays: offFreq === "weekly" ? offWeekdays : [],
+      recurrenceUntil: offFreq !== "none" ? offUntil : null,
     });
     if (res.error) return toast.error(res.error);
     toast.success("Bloqueo añadido");
     setOffStart("");
     setOffEnd("");
     setOffReason("");
+    setOffFreq("none");
+    setOffWeekdays([]);
+    setOffUntil("");
+    setOffAllDay(false);
     loadTimeOff();
   }
 
@@ -234,6 +276,7 @@ export function AvailabilityManager({
               </select>
             </div>
           )}
+
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label className="text-xs">Desde</Label>
@@ -249,11 +292,18 @@ export function AvailabilityManager({
               <Input
                 type="datetime-local"
                 value={offEnd}
+                disabled={offAllDay}
                 onChange={(e) => setOffEnd(e.target.value)}
                 className="mt-1 h-9"
               />
             </div>
           </div>
+
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" checked={offAllDay} onChange={(e) => setOffAllDay(e.target.checked)} />
+            Todo el día
+          </label>
+
           <div>
             <Label className="text-xs">Motivo</Label>
             <Input
@@ -263,6 +313,63 @@ export function AvailabilityManager({
               className="mt-1 h-9"
             />
           </div>
+
+          {/* Repetición */}
+          <div className="rounded-lg bg-ice/50 p-3">
+            <Label className="flex items-center gap-1.5 text-xs font-semibold text-navy">
+              <Repeat className="h-3.5 w-3.5" /> Repetición
+            </Label>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              <button type="button" onClick={() => applyPreset("weekend")} className="rounded-full border border-gray-200 px-2.5 py-1 text-xs hover:border-teal hover:text-teal">
+                Fines de semana
+              </button>
+              <button type="button" onClick={() => applyPreset("weekdays")} className="rounded-full border border-gray-200 px-2.5 py-1 text-xs hover:border-teal hover:text-teal">
+                Laborables
+              </button>
+              <button type="button" onClick={() => applyPreset("daily")} className="rounded-full border border-gray-200 px-2.5 py-1 text-xs hover:border-teal hover:text-teal">
+                Cada día
+              </button>
+            </div>
+
+            <select
+              value={offFreq}
+              onChange={(e) => setOffFreq(e.target.value as RecurrenceFreq)}
+              className="mt-2 h-9 w-full rounded-md border border-gray-200 px-2 text-sm"
+            >
+              {RECURRENCE_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+
+            {offFreq === "weekly" && (
+              <div className="mt-2 flex flex-wrap gap-1">
+                {WEEKDAY_SHORT.map((label, day) => (
+                  <button
+                    key={day}
+                    type="button"
+                    onClick={() => toggleWeekday(day)}
+                    className={`h-8 w-10 rounded-md border text-xs font-medium ${
+                      offWeekdays.includes(day)
+                        ? "border-teal bg-teal text-white"
+                        : "border-gray-200 text-gray-600 hover:border-teal/50"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {offFreq !== "none" && (
+              <div className="mt-2">
+                <Label className="text-xs">Repetir hasta</Label>
+                <Input type="date" value={offUntil} onChange={(e) => setOffUntil(e.target.value)} className="mt-1 h-9" />
+              </div>
+            )}
+          </div>
+
           <Button size="sm" onClick={handleAddTimeOff}>
             <Plus className="mr-1.5 h-4 w-4" /> Añadir bloqueo
           </Button>
@@ -270,21 +377,27 @@ export function AvailabilityManager({
 
         <div className="mt-4 space-y-2">
           {timeOff.length === 0 ? (
-            <p className="text-sm text-gray-400">Sin bloqueos próximos.</p>
+            <p className="text-sm text-gray-400">Sin bloqueos.</p>
           ) : (
             timeOff.map((t) => {
               const pro = professionals.find((p) => p.id === t.professional_id);
+              const recurrence = describeRecurrence(t);
               return (
-                <div key={t.id} className="flex items-center justify-between rounded-lg bg-ice/60 px-3 py-2 text-sm">
-                  <div>
+                <div key={t.id} className="flex items-center justify-between gap-3 rounded-lg bg-red-50 px-3 py-2 text-sm">
+                  <div className="min-w-0">
                     <span className="font-medium text-navy">{pro?.name ?? "Todo el centro"}</span>
                     <span className="ml-2 text-gray-500">
                       {formatInTimeZone(new Date(t.start_at), CLINIC_TZ, "d MMM HH:mm", { locale: es })} →{" "}
                       {formatInTimeZone(new Date(t.end_at), CLINIC_TZ, "d MMM HH:mm", { locale: es })}
                     </span>
+                    {recurrence && (
+                      <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-medium text-red-600">
+                        <Repeat className="h-3 w-3" /> {recurrence}
+                      </span>
+                    )}
                     {t.reason && <span className="block text-xs text-gray-400">{t.reason}</span>}
                   </div>
-                  <button onClick={() => handleDeleteTimeOff(t.id)} className="text-gray-400 hover:text-red-500">
+                  <button onClick={() => handleDeleteTimeOff(t.id)} className="shrink-0 text-gray-400 hover:text-red-500">
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
