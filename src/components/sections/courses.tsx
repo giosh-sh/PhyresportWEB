@@ -1,10 +1,14 @@
 import Image from "next/image";
 import Link from "next/link";
-import { courses } from "@/lib/data";
+import { getPublicCourses } from "@/lib/courses";
 import { ScrollReveal } from "@/components/ui/scroll-reveal";
 import { ArrowRight } from "lucide-react";
 
-export function CoursesSection() {
+export async function CoursesSection() {
+  const courses = await getPublicCourses();
+
+  if (courses.length === 0) return null;
+
   return (
     <section className="py-24 lg:py-28 bg-ice" id="cursos">
       <div className="mx-auto max-w-7xl px-6">
@@ -28,7 +32,7 @@ export function CoursesSection() {
             <ScrollReveal key={course.slug} delay={i * 100}>
               <div className="group bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl hover:-translate-y-1 transition-all grid grid-cols-1 sm:grid-cols-[200px_1fr]">
                 <Image
-                  src={course.image}
+                  src={course.image_url || course.image_full_url}
                   alt={`${course.title} — ${course.date}`}
                   width={200}
                   height={200}

@@ -32,9 +32,9 @@ export async function getPublicCourses(): Promise<Course[]> {
       .eq("active", true)
       .order("sort_order", { ascending: true });
 
-    if (error || !data || data.length === 0) return FALLBACK;
+    if (error) return FALLBACK;
 
-    return (data as Course[]).map((c) => ({
+    return (data ?? []).map((c) => ({
       ...c,
       image_url: c.image_url || c.image_full_url,
       image_full_url: c.image_full_url || c.image_url,

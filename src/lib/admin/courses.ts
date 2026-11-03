@@ -61,6 +61,20 @@ async function uploadCover(formData: FormData): Promise<{ imageUrl?: string; ima
   return result
 }
 
+async function uploadProgramPdf(formData: FormData): Promise<{ url?: string; error?: string }> {
+  const file = formData.get('program_pdf_file') as File | null
+  if (!file || file.size === 0) return {}
+  if (file.type !== 'application/pdf' && !/\.pdf$/i.test(file.name)) {
+    return { error: 'El programa tiene que ser un archivo PDF.' }
+  }
+  try {
+    const urls = await uploadProductImages([file])
+    return { url: urls[0] }
+  } catch (e: any) {
+    return { error: `Error subiendo el PDF: ${e.message}` }
+  }
+}
+
 export async function createCourse(formData: FormData) {
   try {
     try { await checkAdmin() } catch { return { error: 'Unauthorized' } }
@@ -72,6 +86,8 @@ export async function createCourse(formData: FormData) {
     const slug = ((formData.get('slug') as string) || '').trim() || slugify(title)
     const uploads = await uploadCover(formData)
     if (uploads.error) return { error: uploads.error }
+    const pdfUpload = await uploadProgramPdf(formData)
+    if (pdfUpload.error) return { error: pdfUpload.error }
 
     const imageUrl = uploads.imageUrl || ((formData.get('image_url') as string) || '')
     const imageFullUrl = uploads.imageFullUrl || ((formData.get('image_full_url') as string) || imageUrl)
@@ -85,7 +101,7 @@ export async function createCourse(formData: FormData) {
       description: (formData.get('description') as string) || '',
       image_url: imageUrl,
       image_full_url: imageFullUrl,
-      program_pdf: (formData.get('program_pdf') as string) || '',
+      program_pdf: pdfUpload.url || ((formData.get('program_pdf') as string) || ''),
       active: formData.get('active') !== 'false',
       sort_order: count ?? 0,
     })
@@ -93,6 +109,7 @@ export async function createCourse(formData: FormData) {
     if (error) return { error: error.message }
     revalidatePath('/admin/cursos')
     revalidatePath('/cursos')
+    revalidatePath('/')
     return { success: true }
   } catch (e: any) {
     return { error: e?.message || 'Server error' }
@@ -109,12 +126,14 @@ export async function updateCourse(id: string, formData: FormData) {
 
     const uploads = await uploadCover(formData)
     if (uploads.error) return { error: uploads.error }
+    const pdfUpload = await uploadProgramPdf(formData)
+    if (pdfUpload.error) return { error: pdfUpload.error }
 
     const update: Record<string, any> = {
       title,
       date: (formData.get('date') as string) || '',
       description: (formData.get('description') as string) || '',
-      program_pdf: (formData.get('program_pdf') as string) || '',
+      program_pdf: pdfUpload.url || ((formData.get('program_pdf') as string) || ''),
       active: formData.get('active') !== 'false',
       updated_at: new Date().toISOString(),
     }
@@ -132,6 +151,7 @@ export async function updateCourse(id: string, formData: FormData) {
     if (error) return { error: error.message }
     revalidatePath('/admin/cursos')
     revalidatePath('/cursos')
+    revalidatePath('/')
     return { success: true }
   } catch (e: any) {
     return { error: e?.message || 'Server error' }
@@ -146,6 +166,7 @@ export async function deleteCourse(id: string) {
     if (error) return { error: error.message }
     revalidatePath('/admin/cursos')
     revalidatePath('/cursos')
+    revalidatePath('/')
     return { success: true }
   } catch (e: any) {
     return { error: e?.message || 'Server error' }
@@ -160,6 +181,7 @@ export async function toggleCourseActive(id: string, active: boolean) {
     if (error) return { error: error.message }
     revalidatePath('/admin/cursos')
     revalidatePath('/cursos')
+    revalidatePath('/')
     return { success: true }
   } catch (e: any) {
     return { error: e?.message || 'Server error' }
@@ -175,6 +197,7 @@ export async function reorderCourses(ids: string[]) {
     }
     revalidatePath('/admin/cursos')
     revalidatePath('/cursos')
+    revalidatePath('/')
     return { success: true }
   } catch (e: any) {
     return { error: e?.message || 'Server error' }

@@ -68,78 +68,79 @@ export default async function CourseDetailPage({ params }: Props) {
 
         {/* Content */}
         <section className="py-16 lg:py-20">
-          {/* Introducción del curso */}
-          <div className="mx-auto max-w-4xl px-6">
-            <ScrollReveal>
-              <Image
-                src={course.image_full_url || course.image_url}
-                alt={`${course.title} — ${course.date}`}
-                width={800}
-                height={500}
-                className="w-full h-auto rounded-xl shadow-lg mb-10"
-                loading="lazy"
-              />
-            </ScrollReveal>
+          <div className="mx-auto max-w-7xl px-6">
+            {/* En PC: información/póster (y PDF si existe) a la izquierda e
+                inscripción a la derecha. En móvil se apila en el orden actual. */}
+            <div className="grid grid-cols-1 gap-x-12 gap-y-0 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] lg:items-start">
+              <div className="min-w-0">
+                <ScrollReveal>
+                  <Image
+                    src={course.image_full_url || course.image_url}
+                    alt={`${course.title} — ${course.date}`}
+                    width={800}
+                    height={500}
+                    className="w-full h-auto rounded-xl shadow-lg mb-10"
+                    loading="lazy"
+                  />
+                </ScrollReveal>
 
-            <ScrollReveal delay={100}>
-              <p className="text-lg text-gray-500 leading-relaxed mb-8">
-                {course.description}
-              </p>
-            </ScrollReveal>
-
-            <ScrollReveal delay={200}>
-              <div className="flex flex-wrap gap-4 mb-10">
-                {course.program_pdf && (
-                  <a
-                    href={course.program_pdf}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-ice text-navy font-display font-semibold text-sm rounded-full hover:bg-teal hover:text-white transition-all"
-                  >
-                    <FileText className="w-4 h-4" />
-                    Descargar programa completo
-                  </a>
+                {course.description && (
+                  <ScrollReveal delay={100}>
+                    <p className="text-lg text-gray-500 leading-relaxed mb-8">
+                      {course.description}
+                    </p>
+                  </ScrollReveal>
                 )}
-                <a
-                  href="#inscripcion"
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-teal text-white font-display font-semibold text-sm rounded-full hover:bg-cyan transition-all"
-                >
-                  Inscribirme en este curso
-                </a>
-              </div>
-            </ScrollReveal>
-          </div>
 
-          {/* En PC: programa PDF a la izquierda e inscripción a la derecha.
-              En móvil el PDF se oculta y se mantiene el orden actual. */}
-          <div className="mx-auto max-w-7xl px-6 lg:mt-16">
-            <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] lg:items-start lg:gap-12">
-              {course.program_pdf && (
-                <ScrollReveal delay={250} className="hidden min-w-0 lg:block">
-                  <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-                    <h2 className="font-display text-xl font-bold text-navy">
-                      Programa del curso
-                    </h2>
+                <ScrollReveal delay={200}>
+                  <div className="flex flex-wrap gap-4 mb-10">
+                    {course.program_pdf && (
+                      <a
+                        href={course.program_pdf}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 px-6 py-3 bg-ice text-navy font-display font-semibold text-sm rounded-full hover:bg-teal hover:text-white transition-all"
+                      >
+                        <FileText className="w-4 h-4" />
+                        Descargar programa completo
+                      </a>
+                    )}
                     <a
-                      href={course.program_pdf}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 text-sm font-semibold text-teal hover:text-cyan transition-colors"
+                      href="#inscripcion"
+                      className="inline-flex items-center gap-2 px-6 py-3 bg-teal text-white font-display font-semibold text-sm rounded-full hover:bg-cyan transition-all"
                     >
-                      <FileText className="w-4 h-4" />
-                      Abrir en nueva pestaña
+                      Inscribirme en este curso
                     </a>
                   </div>
-                  <div className="overflow-hidden rounded-2xl border border-gray-200 bg-gray-50 shadow-sm">
-                    <iframe
-                      src={`${course.program_pdf}#view=FitH`}
-                      title={`Programa del curso ${course.title}`}
-                      loading="lazy"
-                      className="h-[72vh] max-h-[860px] min-h-[540px] w-full bg-white"
-                    />
-                  </div>
                 </ScrollReveal>
-              )}
+
+                {course.program_pdf && (
+                  <ScrollReveal delay={250} className="hidden lg:block">
+                    <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+                      <h2 className="font-display text-xl font-bold text-navy">
+                        Programa del curso
+                      </h2>
+                      <a
+                        href={course.program_pdf}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 text-sm font-semibold text-teal hover:text-cyan transition-colors"
+                      >
+                        <FileText className="w-4 h-4" />
+                        Abrir en nueva pestaña
+                      </a>
+                    </div>
+                    <div className="overflow-hidden rounded-2xl border border-gray-200 bg-gray-50 shadow-sm">
+                      <iframe
+                        src={`${course.program_pdf}#view=FitH`}
+                        title={`Programa del curso ${course.title}`}
+                        loading="lazy"
+                        className="h-[72vh] max-h-[860px] min-h-[540px] w-full bg-white"
+                      />
+                    </div>
+                  </ScrollReveal>
+                )}
+              </div>
 
               <div id="inscripcion" className="min-w-0 scroll-mt-28 lg:sticky lg:top-28">
                 <div className="rounded-2xl border border-gray-100 bg-white p-8 shadow-sm">

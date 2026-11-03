@@ -40,6 +40,7 @@ export default function CursosAdminPage() {
   const [formDate, setFormDate] = useState('')
   const [formDescription, setFormDescription] = useState('')
   const [formProgramPdf, setFormProgramPdf] = useState('')
+  const [formProgramPdfFile, setFormProgramPdfFile] = useState<File | null>(null)
   const [formImagePreview, setFormImagePreview] = useState('')
   const [formImage, setFormImage] = useState<File | null>(null)
   const [formActive, setFormActive] = useState(true)
@@ -67,6 +68,7 @@ export default function CursosAdminPage() {
     setFormDate('')
     setFormDescription('')
     setFormProgramPdf('')
+    setFormProgramPdfFile(null)
     setFormImagePreview('')
     setFormImage(null)
     setFormActive(true)
@@ -80,6 +82,7 @@ export default function CursosAdminPage() {
     setFormDate(c.date)
     setFormDescription(c.description)
     setFormProgramPdf(c.program_pdf)
+    setFormProgramPdfFile(null)
     setFormImagePreview(c.image_full_url || c.image_url)
     setFormImage(null)
     setFormActive(c.active)
@@ -96,6 +99,7 @@ export default function CursosAdminPage() {
     fd.append('date', formDate)
     fd.append('description', formDescription)
     fd.append('program_pdf', formProgramPdf)
+    if (formProgramPdfFile) fd.append('program_pdf_file', formProgramPdfFile)
     fd.append('active', String(formActive))
     if (formImage) fd.append('image', formImage)
     else if (formImagePreview) {
@@ -388,8 +392,66 @@ export default function CursosAdminPage() {
               />
             </div>
             <div>
-              <Label htmlFor="program_pdf">URL del programa (PDF)</Label>
-              <Input id="program_pdf" value={formProgramPdf} onChange={(e) => setFormProgramPdf(e.target.value)} placeholder="https://..." />
+              <Label htmlFor="program_pdf_file">Programa del curso (PDF)</Label>
+              <label className="mt-1 flex h-10 cursor-pointer items-center justify-center gap-1.5 rounded border border-dashed border-border px-3 text-xs text-muted-foreground transition-colors hover:bg-accent/10">
+                <Upload size={12} />
+                {formProgramPdfFile
+                  ? formProgramPdfFile.name
+                  : formProgramPdf
+                    ? 'Reemplazar PDF'
+                    : 'Subir archivo PDF'}
+                <input
+                  id="program_pdf_file"
+                  type="file"
+                  accept="application/pdf,.pdf"
+                  className="hidden"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0]
+                    if (!f) return
+                    if (f.type !== 'application/pdf' && !/\.pdf$/i.test(f.name)) {
+                      toast.error('Selecciona un archivo PDF')
+                      e.target.value = ''
+                      return
+                    }
+                    setFormProgramPdfFile(f)
+                    setFormProgramPdf('')
+                  }}
+                />
+              </label>
+              {formProgramPdf && !formProgramPdfFile && (
+                <div className="mt-1.5 flex items-center justify-between gap-2 text-xs">
+                  <a
+                    href={formProgramPdf}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="truncate text-teal hover:underline"
+                  >
+                    Ver PDF actual
+                  </a>
+                  <button
+                    type="button"
+                    className="shrink-0 text-red-600 hover:underline"
+                    onClick={() => setFormProgramPdf('')}
+                  >
+                    Quitar
+                  </button>
+                </div>
+              )}
+              <div className="mt-2">
+                <Label htmlFor="program_pdf" className="text-xs text-muted-foreground">
+                  O pega una URL externa
+                </Label>
+                <Input
+                  id="program_pdf"
+                  value={formProgramPdf}
+                  onChange={(e) => {
+                    setFormProgramPdf(e.target.value)
+                    if (e.target.value) setFormProgramPdfFile(null)
+                  }}
+                  placeholder="https://..."
+                  className="mt-1"
+                />
+              </div>
             </div>
             <label className="flex items-center gap-2">
               <input type="checkbox" checked={formActive} onChange={(e) => setFormActive(e.target.checked)} className="rounded border-input" />
