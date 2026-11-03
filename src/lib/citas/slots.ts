@@ -1,5 +1,5 @@
 import { fromZonedTime } from "date-fns-tz";
-import type { Availability, Slot, TimeOff } from "./types";
+import type { Availability, DaySlot, Slot, TimeOff } from "./types";
 
 /** Zona horaria del centro (Santa Cruz de Tenerife). */
 export const CLINIC_TZ = "Atlantic/Canary";
@@ -53,10 +53,11 @@ export function availabilityWindowsFor(
 }
 
 /**
- * Genera las franjas libres para uno o varios profesionales en un día.
- * @returns Slots ordenados con los ids de los profesionales libres en cada uno.
+ * Genera TODAS las franjas del día dentro del horario de los profesionales,
+ * marcando cuáles están libres y cuáles ocupadas/bloqueadas. Así el wizard
+ * público puede mostrar también las horas no disponibles (en rojo).
  */
-export function computeDaySlots(params: {
+export interface DaySlotsParams {
   date: string;
   durationMinutes: number;
   professionalIds: string[];
@@ -66,7 +67,9 @@ export function computeDaySlots(params: {
   stepMinutes?: number;
   /** Días de la semana (0=domingo) en que el centro está cerrado. */
   closedWeekdays?: number[];
-}): Slot[] {
+}
+
+export function computeDaySlotGrid(params: DaySlotsParams): DaySlot[] {
   const {
     date,
     durationMinutes,
@@ -80,14 +83,15 @@ export function computeDaySlots(params: {
 
   const weekday = weekdayOf(date);
 
-  // Centro cerrado ese día (p. ej. fines de semana)
+  // Centro cerrado ese día (p. ej. fines de semana): no hay franjas que mostrar.
   if (closedWeekdays && closedWeekdays.includes(weekday)) return [];
 
   const stepMs = stepMinutes * 60_000;
   const durationMs = durationMinutes * 60_000;
 
-  // Mapa por hora de inicio (ISO) -> profesionales libres
-  const byStart = new Map<string, Set<string>>();
+  // Horas de inicio que existen dentro de algún horario + profesionales libres.
+  const candidateStarts = new Set<string>();
+  const freeByStart = new Map<string, Set<string>>();
 
   for (const proId of professionalIds) {
     const windows = availabilityWindowsFor(availability, proId, weekday);
@@ -110,22 +114,34 @@ export function computeDaySlots(params: {
       if (winEnd <= winStart) continue;
 
       for (let s = winStart; s + durationMs <= winEnd; s += stepMs) {
-        const interval = { start: s, end: s + durationMs };
-        if (overlapsAny(interval, busy)) continue;
         const iso = new Date(s).toISOString();
-        if (!byStart.has(iso)) byStart.set(iso, new Set());
-        byStart.get(iso)!.add(proId);
+        candidateStarts.add(iso);
+        if (overlapsAny({ start: s, end: s + durationMs }, busy)) continue;
+        if (!freeByStart.has(iso)) freeByStart.set(iso, new Set());
+        freeByStart.get(iso)!.add(proId);
       }
     }
   }
 
-  return Array.from(byStart.entries())
-    .map(([start, ids]) => ({
-      start,
-      end: new Date(new Date(start).getTime() + durationMs).toISOString(),
-      professionalIds: Array.from(ids),
-    }))
+  return Array.from(candidateStarts)
+    .map((start) => {
+      const ids = Array.from(freeByStart.get(start) ?? []);
+      return {
+        start,
+        end: new Date(new Date(start).getTime() + durationMs).toISOString(),
+        professionalIds: ids,
+        available: ids.length > 0,
+      };
+    })
     .sort((a, b) => a.start.localeCompare(b.start));
+}
+
+/**
+ * Genera las franjas libres para uno o varios profesionales en un día.
+ * @returns Slots ordenados con los ids de los profesionales libres en cada uno.
+ */
+export function computeDaySlots(params: DaySlotsParams): Slot[] {
+  return computeDaySlotGrid(params).filter((slot) => slot.available);
 }
 
 /**

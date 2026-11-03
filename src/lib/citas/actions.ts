@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { getUserRole, requireStaff } from "@/lib/admin-auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
+  computeDaySlotGrid,
   computeDaySlots,
   dateKeyInTz,
   pickBalancedProfessional,
@@ -17,6 +18,7 @@ import {
   type AppointmentStatus,
   type Availability,
   type BookingService,
+  type DaySlot,
   type Professional,
   type RecurrenceFreq,
   type Slot,
@@ -903,11 +905,11 @@ export async function getPublicBookingData(): Promise<{
   };
 }
 
-export async function getAvailableSlots(
+export async function getDaySlots(
   date: string,
   serviceId: string,
   professionalId: string
-): Promise<Slot[]> {
+): Promise<DaySlot[]> {
   const supabase = createAdminClient();
 
   const { data: service } = await supabase
@@ -952,7 +954,7 @@ export async function getAvailableSlots(
     loadTimeOffOccurrences(dayStart, dayEnd),
   ]);
 
-  return computeDaySlots({
+  return computeDaySlotGrid({
     date,
     durationMinutes: duration,
     professionalIds,
@@ -961,6 +963,16 @@ export async function getAvailableSlots(
     timeOff,
     closedWeekdays: await readClosedWeekdays(),
   });
+}
+
+/** Solo las franjas libres (para validaciones y asignación automática). */
+export async function getAvailableSlots(
+  date: string,
+  serviceId: string,
+  professionalId: string
+): Promise<Slot[]> {
+  const slots = await getDaySlots(date, serviceId, professionalId);
+  return slots.filter((slot) => slot.available);
 }
 
 export interface PublicBookingInput {

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAvailableSlots } from "@/lib/citas/actions";
+import { getDaySlots } from "@/lib/citas/actions";
 import { ANY_PROFESSIONAL } from "@/lib/citas/types";
 
 export const dynamic = "force-dynamic";
@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const slots = await getAvailableSlots(date, serviceId, professionalId);
+    const slots = await getDaySlots(date, serviceId, professionalId);
     return NextResponse.json({ slots });
   } catch {
     return NextResponse.json({ error: "Error al calcular disponibilidad" }, { status: 500 });

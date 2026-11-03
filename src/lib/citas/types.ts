@@ -135,6 +135,12 @@ export interface Slot {
   professionalIds: string[];
 }
 
+/** Franja del día con su estado (libre u ocupada/bloqueada). */
+export interface DaySlot extends Slot {
+  /** false si está ocupada o bloqueada para todos los profesionales candidatos. */
+  available: boolean;
+}
+
 /** Valor especial para "cualquier profesional disponible". */
 export const ANY_PROFESSIONAL = "any";
 

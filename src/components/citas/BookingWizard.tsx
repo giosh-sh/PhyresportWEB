@@ -14,7 +14,7 @@ import {
   Sparkles,
   UserRound,
 } from "lucide-react";
-import { ANY_PROFESSIONAL, type BookingService, type Professional, type Slot } from "@/lib/citas/types";
+import { ANY_PROFESSIONAL, type BookingService, type DaySlot, type Professional } from "@/lib/citas/types";
 import { CLINIC_TZ } from "@/lib/citas/slots";
 import { createPublicBooking } from "@/lib/citas/actions";
 
@@ -49,9 +49,9 @@ export function BookingWizard({
   const [serviceId, setServiceId] = useState<string>(services[0]?.id ?? "");
   const [professionalId, setProfessionalId] = useState<string>(ANY_PROFESSIONAL);
   const [date, setDate] = useState<string>(todayKey());
-  const [slots, setSlots] = useState<Slot[]>([]);
+  const [slots, setSlots] = useState<DaySlot[]>([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
-  const [slot, setSlot] = useState<Slot | null>(null);
+  const [slot, setSlot] = useState<DaySlot | null>(null);
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -94,11 +94,11 @@ export function BookingWizard({
   const canNext =
     (step === 0 && !!serviceId) ||
     (step === 1 && !!professionalId) ||
-    (step === 2 && !!slot) ||
+    (step === 2 && !!slot && slot.available) ||
     step === 3;
 
   async function submit() {
-    if (!slot) return;
+    if (!slot || !slot.available) return;
     setSubmitting(true);
     setError("");
     const res = await createPublicBooking({
@@ -258,7 +258,11 @@ export function BookingWizard({
 
             {step === 2 && (
               <div className="space-y-4">
-                <StepTitle icon={CalendarDays} title="Fecha y hora" subtitle="Solo mostramos huecos realmente libres." />
+                <StepTitle
+                  icon={CalendarDays}
+                  title="Fecha y hora"
+                  subtitle="Las horas ocupadas o bloqueadas aparecen en rojo y no se pueden seleccionar."
+                />
                 <div className="flex gap-2 overflow-x-auto pb-2">
                   {days.map((d) => {
                     const { weekday, day } = dayLabel(d);
@@ -284,27 +288,51 @@ export function BookingWizard({
                   </div>
                 ) : slots.length === 0 ? (
                   <p className="py-10 text-center text-gray-400">
-                    No hay huecos disponibles este día. Prueba con otra fecha.
+                    No hay horario disponible este día. Prueba con otra fecha.
                   </p>
                 ) : (
-                  <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
-                    {slots.map((s) => {
-                      const label = formatInTimeZone(new Date(s.start), CLINIC_TZ, "HH:mm");
-                      return (
-                        <button
-                          key={s.start}
-                          type="button"
-                          onClick={() => setSlot(s)}
-                          className={`rounded-lg border px-2 py-2.5 text-sm font-medium transition-all ${
-                            slot?.start === s.start
-                              ? "border-teal bg-teal text-white"
-                              : "border-gray-200 text-navy hover:border-teal/60 hover:bg-teal/5"
-                          }`}
-                        >
-                          {label}
-                        </button>
-                      );
-                    })}
+                  <div className="space-y-4">
+                    {!slots.some((s) => s.available) && (
+                      <p className="rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
+                        No quedan horas libres este día, pero puedes ver las que ya están ocupadas.
+                      </p>
+                    )}
+
+                    <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+                      {slots.map((s) => {
+                        const label = formatInTimeZone(new Date(s.start), CLINIC_TZ, "HH:mm");
+                        const unavailable = !s.available;
+                        return (
+                          <button
+                            key={s.start}
+                            type="button"
+                            disabled={unavailable}
+                            onClick={() => setSlot(s)}
+                            aria-label={
+                              unavailable ? `${label}, hora ocupada o bloqueada` : `${label}, disponible`
+                            }
+                            className={`rounded-lg border px-2 py-2.5 text-sm font-medium transition-all ${
+                              unavailable
+                                ? "cursor-not-allowed border-red-200 bg-red-50 text-red-400"
+                                : slot?.start === s.start
+                                  ? "border-teal bg-teal text-white"
+                                  : "border-gray-200 text-navy hover:border-teal/60 hover:bg-teal/5"
+                            }`}
+                          >
+                            {label}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-4 text-xs text-gray-400">
+                      <span className="inline-flex items-center gap-1.5">
+                        <span className="h-2.5 w-2.5 rounded-full bg-teal" /> Libre
+                      </span>
+                      <span className="inline-flex items-center gap-1.5">
+                        <span className="h-2.5 w-2.5 rounded-full bg-red-400" /> Ocupado o bloqueado
+                      </span>
+                    </div>
                   </div>
                 )}
               </div>
