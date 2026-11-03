@@ -42,7 +42,7 @@ export default async function CourseDetailPage({ params }: Props) {
         <section className="relative pt-28 pb-16 lg:pt-36 lg:pb-20 bg-navy overflow-hidden">
           <div className="absolute inset-0">
             <Image
-              src={course.image_full_url || course.image_url}
+              src={course.image_url || course.image_full_url}
               alt=""
               fill
               className="object-cover opacity-10"
@@ -75,7 +75,7 @@ export default async function CourseDetailPage({ params }: Props) {
               <div className="min-w-0">
                 <ScrollReveal>
                   <Image
-                    src={course.image_full_url || course.image_url}
+                    src={course.image_url || course.image_full_url}
                     alt={`${course.title} — ${course.date}`}
                     width={800}
                     height={500}
