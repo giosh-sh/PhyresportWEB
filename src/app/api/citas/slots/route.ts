@@ -15,7 +15,8 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const slots = await getDaySlots(date, serviceId, professionalId);
+    // En la reserva pública solo se ofrecen horas en punto (cada 60 min).
+    const slots = await getDaySlots(date, serviceId, professionalId, 60);
     return NextResponse.json({ slots });
   } catch {
     return NextResponse.json({ error: "Error al calcular disponibilidad" }, { status: 500 });

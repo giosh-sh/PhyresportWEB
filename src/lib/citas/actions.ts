@@ -908,7 +908,8 @@ export async function getPublicBookingData(): Promise<{
 export async function getDaySlots(
   date: string,
   serviceId: string,
-  professionalId: string
+  professionalId: string,
+  stepMinutes?: number
 ): Promise<DaySlot[]> {
   const supabase = createAdminClient();
 
@@ -961,6 +962,7 @@ export async function getDaySlots(
     availability: (availRes.data ?? []) as Availability[],
     appointments: (apptRes.data ?? []) as { professional_id: string | null; start_at: string; end_at: string }[],
     timeOff,
+    stepMinutes,
     closedWeekdays: await readClosedWeekdays(),
   });
 }
