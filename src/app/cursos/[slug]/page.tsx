@@ -68,7 +68,8 @@ export default async function CourseDetailPage({ params }: Props) {
 
         {/* Content */}
         <section className="py-16 lg:py-20">
-          <div className="mx-auto max-w-3xl px-6">
+          {/* Introducción del curso */}
+          <div className="mx-auto max-w-4xl px-6">
             <ScrollReveal>
               <Image
                 src={course.image_full_url || course.image_url}
@@ -88,15 +89,17 @@ export default async function CourseDetailPage({ params }: Props) {
 
             <ScrollReveal delay={200}>
               <div className="flex flex-wrap gap-4 mb-10">
-                <a
-                  href={course.program_pdf}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-ice text-navy font-display font-semibold text-sm rounded-full hover:bg-teal hover:text-white transition-all"
-                >
-                  <FileText className="w-4 h-4" />
-                  Descargar programa completo
-                </a>
+                {course.program_pdf && (
+                  <a
+                    href={course.program_pdf}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-ice text-navy font-display font-semibold text-sm rounded-full hover:bg-teal hover:text-white transition-all"
+                  >
+                    <FileText className="w-4 h-4" />
+                    Descargar programa completo
+                  </a>
+                )}
                 <a
                   href="#inscripcion"
                   className="inline-flex items-center gap-2 px-6 py-3 bg-teal text-white font-display font-semibold text-sm rounded-full hover:bg-cyan transition-all"
@@ -105,31 +108,62 @@ export default async function CourseDetailPage({ params }: Props) {
                 </a>
               </div>
             </ScrollReveal>
+          </div>
 
-            {/* Inscripción */}
-            <ScrollReveal delay={250}>
-              <div
-                id="inscripcion"
-                className="scroll-mt-28 rounded-2xl border border-gray-100 bg-white p-8 shadow-sm"
-              >
-                <h2 className="font-display text-2xl font-bold text-navy mb-2">
-                  Inscripción al curso
-                </h2>
-                <p className="text-gray-500 mb-6">
-                  Rellena el formulario y te contactaremos con los siguientes pasos. No es necesario
-                  tener cuenta.
-                </p>
-                <CourseRegistrationForm
-                  courseId={course.id}
-                  courseSlug={course.slug}
-                  courseTitle={course.title}
-                />
+          {/* En PC: programa PDF a la izquierda e inscripción a la derecha.
+              En móvil el PDF se oculta y se mantiene el orden actual. */}
+          <div className="mx-auto max-w-7xl px-6 lg:mt-16">
+            <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] lg:items-start lg:gap-12">
+              {course.program_pdf && (
+                <ScrollReveal delay={250} className="hidden min-w-0 lg:block">
+                  <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+                    <h2 className="font-display text-xl font-bold text-navy">
+                      Programa del curso
+                    </h2>
+                    <a
+                      href={course.program_pdf}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 text-sm font-semibold text-teal hover:text-cyan transition-colors"
+                    >
+                      <FileText className="w-4 h-4" />
+                      Abrir en nueva pestaña
+                    </a>
+                  </div>
+                  <div className="overflow-hidden rounded-2xl border border-gray-200 bg-gray-50 shadow-sm">
+                    <iframe
+                      src={`${course.program_pdf}#view=FitH`}
+                      title={`Programa del curso ${course.title}`}
+                      loading="lazy"
+                      className="h-[72vh] max-h-[860px] min-h-[540px] w-full bg-white"
+                    />
+                  </div>
+                </ScrollReveal>
+              )}
+
+              <div id="inscripcion" className="min-w-0 scroll-mt-28 lg:sticky lg:top-28">
+                <div className="rounded-2xl border border-gray-100 bg-white p-8 shadow-sm">
+                  <h2 className="font-display text-2xl font-bold text-navy mb-2">
+                    Inscripción al curso
+                  </h2>
+                  <p className="text-gray-500 mb-6">
+                    Rellena el formulario y te contactaremos con los siguientes pasos. No es
+                    necesario tener cuenta.
+                  </p>
+                  <CourseRegistrationForm
+                    courseId={course.id}
+                    courseSlug={course.slug}
+                    courseTitle={course.title}
+                  />
+                </div>
               </div>
-            </ScrollReveal>
+            </div>
+          </div>
 
-            {/* BonificaTuCurso */}
+          {/* BonificaTuCurso */}
+          <div className="mx-auto mt-10 max-w-3xl px-6">
             <ScrollReveal delay={300}>
-              <div className="mt-10 bg-ice rounded-xl p-8 text-center">
+              <div className="bg-ice rounded-xl p-8 text-center">
                 <a
                   href={siteConfig.bonificaTuCurso}
                   target="_blank"
