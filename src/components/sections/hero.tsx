@@ -90,9 +90,14 @@ export async function HeroSection() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           {/* Text */}
           <div>
-            <p className="font-display text-xl lg:text-2xl font-extrabold tracking-[0.35em] uppercase text-white mb-5 animate-fade-up">
-              Phyresport
-            </p>
+            <Image
+              src="/img/phyresport_logo_blanco.png"
+              alt="Phyresport"
+              width={1194}
+              height={691}
+              priority
+              className="mb-5 h-16 w-auto lg:h-20 animate-fade-up"
+            />
 
             <p className="font-stats text-[13px] font-medium tracking-widest uppercase text-teal mb-5 animate-fade-up-delay-1">
               Fisioterapia deportiva de precisión

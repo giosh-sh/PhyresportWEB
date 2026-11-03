@@ -48,6 +48,15 @@ function defaultUntil(): string {
   return d.toISOString().slice(0, 10);
 }
 
+/** Sábado del fin de semana actual (o el próximo si aún no llega). */
+function weekendBaseKey(): string {
+  const today = formatInTimeZone(new Date(), CLINIC_TZ, "yyyy-MM-dd");
+  const d = new Date(`${today}T00:00:00Z`);
+  const dow = d.getUTCDay(); // 0 = domingo
+  d.setUTCDate(d.getUTCDate() + (dow === 0 ? -1 : 6 - dow));
+  return d.toISOString().slice(0, 10);
+}
+
 export function AvailabilityManager({
   professionals,
   lockedProfessionalId,
@@ -71,6 +80,7 @@ export function AvailabilityManager({
   const [offFreq, setOffFreq] = useState<RecurrenceFreq>("none");
   const [offWeekdays, setOffWeekdays] = useState<number[]>([]);
   const [offUntil, setOffUntil] = useState("");
+  const [blockingWeekends, setBlockingWeekends] = useState(false);
 
   const loadAvailability = useCallback(async (pid: string) => {
     if (!pid) return;
@@ -119,18 +129,62 @@ export function AvailabilityManager({
   }
 
   function applyPreset(preset: "weekend" | "weekdays" | "daily") {
+    // Los presets bloquean días completos y rellenan la fecha de inicio para
+    // que se pueda guardar sin tener que elegir hora.
+    setOffAllDay(true);
     if (preset === "daily") {
       setOffFreq("daily");
       setOffWeekdays([]);
+      setOffStart((s) => s || `${weekendBaseKey()}T00:00`);
     } else if (preset === "weekend") {
       setOffFreq("weekly");
       setOffWeekdays([0, 6]);
+      setOffStart((s) => s || `${weekendBaseKey()}T00:00`);
     } else {
       setOffFreq("weekly");
       setOffWeekdays([1, 2, 3, 4, 5]);
+      setOffStart((s) => s || `${weekendBaseKey()}T00:00`);
     }
     // Rellena "repetir hasta" si está vacío para no bloquear el guardado.
     setOffUntil((u) => u || defaultUntil());
+  }
+
+  /** Crea de una vez el bloqueo de todos los fines de semana (sábado y domingo). */
+  async function handleBlockWeekends() {
+    if (blockingWeekends) return;
+    const sat = weekendBaseKey();
+    const startISO = zonedDateTimeToUtc(sat, "00:00").toISOString();
+    const endISO = zonedDateTimeToUtc(sat, "23:59").toISOString();
+
+    setBlockingWeekends(true);
+    try {
+      const res = await addTimeOff({
+        professionalId: offPro || null,
+        startISO,
+        endISO,
+        allDay: true,
+        reason: offReason.trim() || "Fin de semana",
+        recurrence: "weekly",
+        recurrenceInterval: 1,
+        recurrenceWeekdays: [0, 6],
+        recurrenceUntil: offUntil || defaultUntil(),
+      });
+      if (res.error) return toast.error(res.error);
+      if (res.warning) toast.warning(res.warning);
+      else toast.success("Fines de semana bloqueados");
+      setOffStart("");
+      setOffEnd("");
+      setOffReason("");
+      setOffFreq("none");
+      setOffWeekdays([]);
+      setOffUntil("");
+      setOffAllDay(false);
+      loadTimeOff();
+    } catch {
+      toast.error("No se pudieron bloquear los fines de semana.");
+    } finally {
+      setBlockingWeekends(false);
+    }
   }
 
   async function handleAddTimeOff() {
@@ -400,9 +454,28 @@ export function AvailabilityManager({
             )}
           </div>
 
-          <Button size="sm" onClick={handleAddTimeOff}>
-            <Plus className="mr-1.5 h-4 w-4" /> Añadir bloqueo
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button size="sm" onClick={handleAddTimeOff}>
+              <Plus className="mr-1.5 h-4 w-4" /> Añadir bloqueo
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleBlockWeekends}
+              disabled={blockingWeekends}
+            >
+              {blockingWeekends ? (
+                <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+              ) : (
+                <CalendarOff className="mr-1.5 h-4 w-4" />
+              )}
+              Bloquear fines de semana
+            </Button>
+          </div>
+          <p className="text-xs text-gray-400">
+            «Bloquear fines de semana» crea una ausencia de todo el día para cada sábado y domingo,
+            para el profesional seleccionado o para todo el centro.
+          </p>
         </div>
 
         <div className="mt-4 space-y-2">

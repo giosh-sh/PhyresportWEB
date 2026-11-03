@@ -183,6 +183,26 @@ async function loadTimeOffOccurrences(startISO: string, endISO: string): Promise
   return out.sort((a, b) => a.start_at.localeCompare(b.start_at));
 }
 
+/**
+ * ¿El profesional (o todo el centro) está bloqueado en ese intervalo?
+ * Tiene en cuenta tanto bloqueos puntuales como series recurrentes.
+ */
+async function timeOffConflictExists(
+  professionalId: string,
+  startISO: string,
+  endISO: string
+): Promise<boolean> {
+  const occurrences = await loadTimeOffOccurrences(startISO, endISO);
+  const startMs = new Date(startISO).getTime();
+  const endMs = new Date(endISO).getTime();
+  return occurrences.some(
+    (o) =>
+      (!o.professional_id || o.professional_id === professionalId) &&
+      new Date(o.start_at).getTime() < endMs &&
+      new Date(o.end_at).getTime() > startMs
+  );
+}
+
 /* ============================================================
    Consultas (staff)
    ============================================================ */
@@ -351,6 +371,13 @@ export async function createManualAppointment(
   }
 
   const endISO = new Date(new Date(input.startISO).getTime() + duration * 60_000).toISOString();
+
+  // Los bloqueos/ausencias (incluidas las series recurrentes) mandan incluso
+  // para el personal: si quiere reservar ahí, primero debe quitar el bloqueo.
+  if (await timeOffConflictExists(professionalId, input.startISO, endISO)) {
+    return { error: "Ese horario está bloqueado (bloqueo o ausencia)." };
+  }
+
   if (!input.allowConflict && cubicle && (await cubicleConflictExists(cubicle, input.startISO, endISO))) {
     const suggestions = await computeSuggestions(professionalId, input.startISO, duration, cubicle);
     return {
@@ -492,6 +519,13 @@ export async function rescheduleAppointment(
   }
 
   const endISO = new Date(new Date(startISO).getTime() + duration * 60_000).toISOString();
+
+  // No se puede mover una cita a una franja bloqueada, ni aunque sea una
+  // serie recurrente (vacaciones, fines de semana, ausencias…).
+  if (await timeOffConflictExists(professionalId, startISO, endISO)) {
+    return { error: "Ese horario está bloqueado (bloqueo o ausencia)." };
+  }
+
   if (
     !allowConflict &&
     cubicle &&
@@ -893,7 +927,9 @@ export async function getAvailableSlots(
 
   const professionalIds =
     professionalId && professionalId !== ANY_PROFESSIONAL
-      ? [professionalId]
+      ? allPros.some((p) => p.id === professionalId)
+        ? [professionalId]
+        : []
       : allPros.map((p) => p.id);
   if (professionalIds.length === 0) return [];
 
@@ -952,6 +988,7 @@ export async function createPublicBooking(
     .from("booking_services")
     .select("id,name,duration_minutes")
     .eq("id", input.serviceId)
+    .eq("active", true)
     .maybeSingle();
   if (!service) return { error: "Servicio no disponible." };
   const duration = service.duration_minutes ?? 60;
@@ -964,14 +1001,26 @@ export async function createPublicBooking(
     userId = null;
   }
 
-  // Determinar candidatos (asignación automática equilibrada si "any")
+  // Revalidar siempre contra la disponibilidad real (horario del fisio, días
+  // de cierre, citas y bloqueos/ausencias puntuales o recurrentes). Así un
+  // cliente no puede colar una reserva en una hora bloqueada ni manipulando
+  // la petición desde el navegador.
+  const startDate = new Date(input.startISO);
+  if (Number.isNaN(startDate.getTime())) {
+    return { error: "Selecciona una hora válida." };
+  }
+  const startISO = startDate.toISOString();
+  const date = dateKeyInTz(startDate);
   let candidateIds: string[];
   if (input.professionalId && input.professionalId !== ANY_PROFESSIONAL) {
+    const slots = await getAvailableSlots(date, input.serviceId, input.professionalId);
+    const slot = slots.find(
+      (s) => s.start === startISO && s.professionalIds.includes(input.professionalId)
+    );
+    if (!slot) return { error: "Ese hueco ya no está disponible. Elige otra hora." };
     candidateIds = [input.professionalId];
   } else {
-    const date = new Date(input.startISO).toISOString().slice(0, 10);
-    const slots = await getAvailableSlotsForStart(date, input.serviceId, input.startISO);
-    candidateIds = slots;
+    candidateIds = await getAvailableSlotsForStart(date, input.serviceId, startISO);
     if (candidateIds.length === 0) {
       return { error: "Ese hueco ya no está disponible. Elige otra hora." };
     }
@@ -982,7 +1031,7 @@ export async function createPublicBooking(
     const { error } = await supabase.rpc("create_appointment", {
       p_professional_id: professionalId,
       p_service_id: input.serviceId,
-      p_start_at: input.startISO,
+      p_start_at: startISO,
       p_duration_minutes: duration,
       p_patient_name: name,
       p_patient_email: email,
@@ -1017,7 +1066,11 @@ export async function createPublicBooking(
     }
 
     const message = error.message || "";
-    if (message.includes("SLOT_TAKEN") || message.includes("SLOT_BLOCKED")) {
+    if (
+      message.includes("SLOT_TAKEN") ||
+      message.includes("SLOT_BLOCKED") ||
+      message.includes("CUBICLE_TAKEN")
+    ) {
       lastError = "Ese hueco ya no está disponible. Elige otra hora.";
       continue;
     }
